@@ -36,7 +36,7 @@ export function BoardShell({ volumeCents }: { volumeCents: number }) {
 
   return (
     <BidFormProvider>
-      <Dateline volumeCents={volumeCents} />
+   
       <BidHero sentinelRef={sentinelRef} />
 
       {/*

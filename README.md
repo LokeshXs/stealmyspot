@@ -1,4 +1,4 @@
-# outbid
+# Steal My Spot
 
 A pay-to-rank public ledger. There are no accounts, no ads, and no revenue share. **Your bid is your
 rank.** Pay more than the standing top number and you hold first place; pay less and you take the
@@ -109,9 +109,15 @@ Two layout details that are load-bearing:
   (`white-space: nowrap`) listing descriptions would otherwise size the track to their full
   unwrapped width and push a phone into horizontal scroll.
 
-The name is still undecided, so branding is env-driven: `NEXT_PUBLIC_SITE_NAME`,
-`NEXT_PUBLIC_SITE_TLD`, `NEXT_PUBLIC_TAGLINE`, `NEXT_PUBLIC_TAGLINE_EMPHASIS`. The logo mark is
-deliberately name-agnostic.
+Branding stays env-driven: `NEXT_PUBLIC_SITE_NAME`, `NEXT_PUBLIC_SITE_ACCENT` (the trailing word
+that takes the violet, defaulting to the last word), `NEXT_PUBLIC_TAGLINE` and
+`NEXT_PUBLIC_TAGLINE_EMPHASIS`. `splitBrandName()` in [`src/lib/env.ts`](src/lib/env.ts) is the one
+place the name is divided, so the wordmark, the footer and the social card cannot disagree.
+
+The mark is two carets passing each other — a rising violet one and a falling muted one — drawn
+once as `LOGO_PATHS` in [`src/components/icons.tsx`](src/components/icons.tsx) and reused by the
+favicon and the OG card. Note that the taglines are metadata only; they no longer render on the
+page.
 
 ## Notes
 

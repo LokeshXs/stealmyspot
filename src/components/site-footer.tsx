@@ -1,16 +1,18 @@
 import Link from "next/link";
-import { branding } from "@/lib/env";
+import { splitBrandName } from "@/lib/env";
 
 /**
  * The only navigation on the page. Rules moved down here so the masthead has
  * nothing competing with the wordmark and the live badge.
  */
 export function SiteFooter() {
+  const { lead, accent } = splitBrandName();
+
   return (
     <footer className="rule-t mt-12 flex flex-wrap items-center gap-x-5 gap-y-2 pt-4 text-xs text-muted-foreground">
       <span className="font-bold text-foreground">
-        {branding.name}
-        {branding.tld}
+        {lead}
+        <span className="text-primary">{accent}</span>
       </span>
 
       <nav aria-label="Site" className="flex items-center gap-x-5">

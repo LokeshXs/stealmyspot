@@ -1,4 +1,4 @@
-// Outbid — pay-to-rank leaderboard.
+// Steal My Spot — pay-to-rank leaderboard.
 // Rank is derived purely from `Listing.amountCents`; nothing else moves a row.
 
 generator client {

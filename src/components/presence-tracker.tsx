@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 const HEARTBEAT_MS = 30_000;
-const STORAGE_KEY = "outbid.session";
+const STORAGE_KEY = "presence.session";
 
 /** Heartbeats a per-tab session id so the live counter has something to count. */
 export function PresenceTracker() {

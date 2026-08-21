@@ -45,7 +45,7 @@ export function LivePill({
   return (
     <Link
       href="/stats"
-      className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
     >
       <span className="relative inline-flex size-2 shrink-0">
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-70 motion-reduce:animate-none" />

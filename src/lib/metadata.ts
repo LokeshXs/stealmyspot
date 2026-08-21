@@ -3,6 +3,8 @@ import "server-only";
 import dns from "node:dns/promises";
 import net from "node:net";
 
+import { appUrl, branding } from "@/lib/env";
+
 /**
  * Fetches a submitted URL and pulls out the Open Graph card we show on the board.
  *
@@ -14,8 +16,12 @@ import net from "node:net";
 const TIMEOUT_MS = 5_000;
 const MAX_BYTES = 512 * 1024;
 const MAX_REDIRECTS = 3;
-const USER_AGENT =
-  "Mozilla/5.0 (compatible; OutbidBot/1.0; +https://outbid.lol) AppleWebKit/537.36";
+/**
+ * Derived from the brand so the bot introduces itself honestly to every site it
+ * fetches. Site owners read this in their logs; a stale name here is a stale
+ * name on someone else's server.
+ */
+const USER_AGENT = `Mozilla/5.0 (compatible; ${branding.name.replace(/\s+/g, "")}Bot/1.0; +${appUrl}) AppleWebKit/537.36`;
 
 export interface ScrapedMetadata {
   displayName: string | null;

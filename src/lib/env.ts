@@ -16,19 +16,36 @@ export const paymentProvider: PaymentProviderName =
 export const appUrl =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
 
-/** Branding is env-driven — the real name is still undecided. */
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME ?? "Steal My Spot";
+
+/** Branding is env-driven so the name and its accent can move without a deploy. */
 export const branding = {
-  name: process.env.NEXT_PUBLIC_SITE_NAME ?? "outbid",
-  tld: process.env.NEXT_PUBLIC_SITE_TLD ?? ".lol",
+  name: siteName,
+  /**
+   * The trailing word that carries the accent colour in the wordmark. Defaults
+   * to the last word, which keeps a one-word name working, while the env var
+   * stays available if the accent belongs somewhere else.
+   */
+  accent: process.env.NEXT_PUBLIC_SITE_ACCENT ?? siteName.split(/\s+/).at(-1) ?? siteName,
   tagline:
     process.env.NEXT_PUBLIC_TAGLINE ??
-    "One list, ordered by price. The only thing holding a position is the number beside it.",
+    "Every spot on this list is for sale. Yours included.",
   taglineEmphasis:
     process.env.NEXT_PUBLIC_TAGLINE_EMPHASIS ??
-    "Nothing here is editorial. Every place on this page was paid for.",
+    "Outbid the number beside a name and the spot is yours.",
 };
 
-export const siteTitle = `${branding.name}${branding.tld}`;
+export const siteTitle = branding.name;
+
+/**
+ * Splits the name into the part that stays ink and the part that takes the
+ * accent, so the wordmark, the footer and the social card all agree.
+ */
+export function splitBrandName(): { lead: string; accent: string } {
+  const { name, accent } = branding;
+  if (!accent || !name.endsWith(accent)) return { lead: name, accent: "" };
+  return { lead: name.slice(0, name.length - accent.length), accent };
+}
 
 /** Credentials for creating checkouts. Only read on the checkout path. */
 export function dodoEnv() {

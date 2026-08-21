@@ -3,8 +3,24 @@ import { cn } from "@/lib/utils";
 type IconProps = React.ComponentProps<"svg">;
 
 /**
- * An ascending caret held between two brackets — a rank glyph, not a bar chart.
- * The brackets carry the ledger idea; the caret is the only accented element.
+ * The mark's geometry, exported so the social card draws the identical shape
+ * instead of a second hand-built approximation.
+ */
+export const LOGO_PATHS = {
+  up: "M18 3 L27 14 H9 Z",
+  down: "M14 29 L5 18 H23 Z",
+} as const;
+
+/**
+ * Two carets passing each other — the moment a spot changes hands.
+ *
+ * The rising caret sits right of centre and the falling one left of centre, so
+ * they overlap horizontally and read as displacement rather than as a static
+ * up/down stack. Solid triangles, not strokes: the 4-unit gap between them is
+ * the only fine detail, which still survives as ~2px at favicon size.
+ *
+ * Only the riser is accented. The faller is `currentColor` at 35%, so it
+ * inherits the foreground and needs no second colour token to work in both themes.
  */
 export function LogoMark({ className, ...props }: IconProps) {
   return (
@@ -15,21 +31,8 @@ export function LogoMark({ className, ...props }: IconProps) {
       className={cn("size-7", className)}
       {...props}
     >
-      <path
-        d="M9 4H4v24h5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="square"
-        opacity="0.55"
-      />
-      <path
-        d="M23 4h5v24h-5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="square"
-        opacity="0.55"
-      />
-      <path d="M16 9l7 12H9l7-12Z" className="fill-primary" />
+      <path d={LOGO_PATHS.up} className="fill-primary" />
+      <path d={LOGO_PATHS.down} fill="currentColor" opacity="0.35" />
     </svg>
   );
 }
