@@ -82,8 +82,24 @@ export async function fulfillBid(
   });
 
   if (outcome.status === "fulfilled") {
-    revalidatePath("/");
-    revalidatePath("/stats");
+    /*
+     * The transaction is already committed by this point, so a cache failure
+     * must not surface as a failed fulfilment — that would invite a re-run
+     * against a payment that has in fact settled.
+     *
+     * `revalidatePath` needs a Next request context, which `scripts/reconcile.ts`
+     * does not have. Losing it there is harmless: the board is `force-dynamic`
+     * and re-reads on the next request regardless.
+     */
+    try {
+      revalidatePath("/");
+      revalidatePath("/stats");
+    } catch (error) {
+      console.warn(
+        "[fulfillBid] revalidate skipped (no request context):",
+        error instanceof Error ? error.message : error,
+      );
+    }
   }
 
   return outcome;

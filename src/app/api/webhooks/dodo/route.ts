@@ -38,6 +38,24 @@ export async function POST(request: Request) {
     // The library's WebhookVerificationError loses its `name` through bundling,
     // so the message is the only reliable discriminator. These strings come from
     // the vendored Standard Webhooks implementation.
+    /*
+     * Log loudly. A rejected delivery is written nowhere — the WebhookEvent row
+     * is only created after verification — so without this line an endpoint
+     * configured with the wrong signing secret is indistinguishable from one
+     * that was never called at all. Each Dodo endpoint has its OWN secret, so
+     * that mix-up is easy to make the moment you have more than one.
+     */
+    console.warn(
+      "[dodo webhook] rejected:",
+      JSON.stringify({
+        reason: error instanceof Error ? error.message : String(error),
+        webhookId: headers["webhook-id"] ?? null,
+        timestamp: headers["webhook-timestamp"] ?? null,
+        hasSignature: Boolean(headers["webhook-signature"]),
+        bytes: body.length,
+      }),
+    );
+
     const message = error instanceof Error ? error.message : "";
     const isSignatureFailure =
       message.includes("No matching signature found") ||
