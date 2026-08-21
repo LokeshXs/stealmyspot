@@ -1,9 +1,8 @@
 # outbid
 
-A pay-to-rank public leaderboard — a working replica of [outbid.lol](https://outbid.lol/).
-
-There are no accounts, no ads, and no revenue share. **Your bid is your rank.** Pay more than the
-current #1 and you sit at #1; pay less and you land wherever that amount places you.
+A pay-to-rank public ledger. There are no accounts, no ads, and no revenue share. **Your bid is your
+rank.** Pay more than the standing top number and you hold first place; pay less and you take the
+highest position that amount can afford.
 
 ---
 
@@ -72,14 +71,28 @@ Three things the implementation is careful about:
 3. **Deliveries are idempotent.** Dodo retries up to 8 times and may arrive out of order, so every
    delivery is recorded by its `webhook-id` header first; a repeat returns `200` and changes nothing.
 
-## Design system
+## Design system — "editorial ledger"
 
-Every colour lives in `:root` / `.dark` in [`src/app/globals.css`](src/app/globals.css) — violet on
-cool slate, with full dark mode. Token *names* mirror shadcn/ui, so swapping the palette is a
-one-file change.
+The organising idea is a **public ledger of what people paid to be seen**, not a consumer-app
+leaderboard. Structure comes from hairline rules and tabular numerals; nothing on the page carries a
+soft shadow.
+
+Every token lives in `:root` / `.dark` in [`src/app/globals.css`](src/app/globals.css) — violet on
+cool slate, `--radius: 0.25rem`, plus `--rule` / `--rule-strong` for the ink-toned dividers and
+`--accent-bar` for the leading row's margin marker. Token *names* mirror shadcn/ui, so swapping the
+palette is a one-file change.
+
+Three type roles, all via `next/font`: **Instrument Serif** for the masthead and headings,
+**Inter Tight** for UI and body, **IBM Plex Mono** for money, ranks and anything tabular.
+
+Layout is a masthead → dateline → two-column grid. The bid composer is first in source order so it
+sits above the ledger on a phone, and `lg:order-2` swings it into a sticky right rail on desktop.
+Board state lives in [`board-context.tsx`](src/components/board-context.tsx) so the composer and the
+listing table can occupy sibling columns and still agree on the current ranks.
 
 The name is still undecided, so branding is env-driven: `NEXT_PUBLIC_SITE_NAME`,
-`NEXT_PUBLIC_SITE_TLD`, `NEXT_PUBLIC_TAGLINE`, `NEXT_PUBLIC_TAGLINE_EMPHASIS`.
+`NEXT_PUBLIC_SITE_TLD`, `NEXT_PUBLIC_TAGLINE`, `NEXT_PUBLIC_TAGLINE_EMPHASIS`. The logo mark is
+deliberately name-agnostic.
 
 ## Notes
 

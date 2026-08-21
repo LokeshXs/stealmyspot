@@ -4,8 +4,8 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Image avatar that quietly falls back to a letter tile — the board is full of
- * third-party og:image URLs, and a fair share of them 404.
+ * Square hairline tile. Falls back to a letter when the scraped og:image is
+ * missing or 404s — a fair share of them do.
  */
 export function Avatar({
   src,
@@ -25,7 +25,7 @@ export function Avatar({
     <span
       data-slot="avatar"
       className={cn(
-        "relative flex shrink-0 select-none overflow-hidden rounded-md bg-muted",
+        "relative flex shrink-0 select-none overflow-hidden border border-border bg-muted",
         className,
       )}
     >
@@ -40,7 +40,7 @@ export function Avatar({
           className="size-full object-cover"
         />
       ) : (
-        <span className="flex size-full items-center justify-center text-sm font-semibold text-muted-foreground">
+        <span className="flex size-full items-center justify-center font-mono text-xs text-muted-foreground">
           {fallback}
         </span>
       )}

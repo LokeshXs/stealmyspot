@@ -1,64 +1,59 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "@/components/icons";
-import { cn } from "@/lib/utils";
 
+/** Bottom-of-page navigation: a range readout on the left, arrows on the right. */
 export function Pagination({
   page,
   pageCount,
+  rangeStart,
+  rangeEnd,
+  total,
   onPageChange,
-  label,
 }: {
   page: number;
   pageCount: number;
+  rangeStart: number;
+  rangeEnd: number;
+  total: number;
   onPageChange: (page: number) => void;
-  label: string;
 }) {
-  if (pageCount <= 1) return null;
-
-  const pages = Array.from({ length: pageCount }, (_, i) => i + 1);
+  const pad = (n: number) => String(n).padStart(3, "0");
 
   return (
-    <nav aria-label={label} className="flex items-center">
-      <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          aria-label="Previous page"
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-          className="flex size-6 cursor-pointer items-center justify-center text-primary transition-colors hover:text-primary/80 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-not-allowed disabled:text-muted-foreground/40"
-        >
-          <ChevronLeft />
-        </button>
+    <nav
+      aria-label="Ledger pages"
+      className="rule-t flex items-center justify-between gap-4 py-3 font-mono text-[11px] text-muted-foreground"
+    >
+      <p className="tabular-nums">
+        {total === 0 ? "no entries" : `${pad(rangeStart)}–${pad(rangeEnd)} of ${pad(total)}`}
+      </p>
 
-        {pages.map((n) => (
+      {pageCount > 1 ? (
+        <div className="flex items-center gap-3">
           <button
-            key={n}
             type="button"
-            aria-label={`Page ${n}`}
-            aria-current={n === page ? "page" : undefined}
-            onClick={() => onPageChange(n)}
-            className={cn(
-              "flex h-6 min-w-6 cursor-pointer items-center justify-center rounded-full px-1 text-xs font-medium tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
-              n === page
-                ? "bg-primary text-primary-foreground"
-                : "text-primary hover:bg-primary/10",
-            )}
+            aria-label="Previous page"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            className="cursor-pointer p-1 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
           >
-            {n}
+            <ChevronLeft />
           </button>
-        ))}
-
-        <button
-          type="button"
-          aria-label="Next page"
-          disabled={page >= pageCount}
-          onClick={() => onPageChange(page + 1)}
-          className="flex size-6 cursor-pointer items-center justify-center text-primary transition-colors hover:text-primary/80 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-not-allowed disabled:text-muted-foreground/40"
-        >
-          <ChevronRight />
-        </button>
-      </div>
+          <span className="tabular-nums">
+            Page {page} of {pageCount}
+          </span>
+          <button
+            type="button"
+            aria-label="Next page"
+            disabled={page >= pageCount}
+            onClick={() => onPageChange(page + 1)}
+            className="cursor-pointer p-1 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            <ChevronRight />
+          </button>
+        </div>
+      ) : null}
     </nav>
   );
 }

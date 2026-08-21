@@ -4,8 +4,10 @@
 
 /*
  * Design tokens — the single source of truth for the whole site.
- * Token *names* mirror shadcn/ui so component classes stay portable;
- * the palette is ours (violet on cool slate). Swap the values here to rebrand.
+ *
+ * The language is "editorial ledger": structure comes from hairline rules and
+ * tabular numerals, never from soft shadows or pills. Swap the values here to
+ * rebrand; nothing else hard-codes a colour.
  */
 :root {
   --background: #fbfbfd;
@@ -28,8 +30,15 @@
   --border: #e5e5ec;
   --input: #e5e5ec;
   --ring: #6d5cf6;
-  --radius: 0.875rem;
-  --board-shadow: 0 12px 50px rgb(23 23 31 / 0.08);
+
+  /* Precise, not friendly. */
+  --radius: 0.25rem;
+
+  /* Ink-toned dividers, so rules read as printed rather than as UI chrome. */
+  --rule: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --rule-strong: color-mix(in oklab, var(--foreground) 82%, transparent);
+  /* Left marker on the leading row. */
+  --accent-bar: var(--primary);
 }
 
 .dark {
@@ -40,7 +49,7 @@
   --popover: #17171f;
   --popover-foreground: #f4f4f7;
   --primary: #8b7bff;
-  --primary-foreground: #ffffff;
+  --primary-foreground: #17171f;
   --live: #4ade80;
   --secondary: #1e1e28;
   --secondary-foreground: #f4f4f7;
@@ -50,10 +59,12 @@
   --accent-foreground: #f4f4f7;
   --destructive: #fb7185;
   --destructive-foreground: #17171f;
-  --border: rgb(255 255 255 / 0.10);
-  --input: rgb(255 255 255 / 0.15);
+  --border: rgb(255 255 255 / 0.12);
+  --input: rgb(255 255 255 / 0.18);
   --ring: #8b7bff;
-  --board-shadow: 0 12px 50px rgb(0 0 0 / 0.45);
+
+  --rule: color-mix(in oklab, var(--foreground) 16%, transparent);
+  --rule-strong: color-mix(in oklab, var(--foreground) 70%, transparent);
 }
 
 @theme inline {
@@ -77,14 +88,17 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
 
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Masthead and headings / UI and body / anything tabular. */
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: calc(var(--radius) - 1px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
 }
 
 @layer base {
@@ -102,12 +116,22 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Numerals should never jitter as bids tick up. */
+  /* Money and ranks must never jitter as figures tick over. */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
 }
 
-@utility board-shadow {
-  box-shadow: var(--board-shadow);
+/* A printed hairline, distinct from a UI border. */
+@utility rule-t {
+  border-top: 1px solid var(--rule);
+}
+
+@utility rule-b {
+  border-bottom: 1px solid var(--rule);
+}
+
+/* The heavier rule under the masthead. */
+@utility rule-masthead {
+  border-bottom: 2px solid var(--rule-strong);
 }

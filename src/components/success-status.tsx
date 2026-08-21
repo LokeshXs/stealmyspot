@@ -57,13 +57,17 @@ export function SuccessStatus({
   if (status === "PAID") {
     return (
       <div>
-        <p className="text-5xl font-bold tracking-[-0.03em] text-primary tabular-nums">
-          {rank ? `#${rank}` : "You're on"}
+        <p className="font-mono text-6xl text-primary tabular-nums">
+          {rank ? String(rank).padStart(2, "0") : "—"}
         </p>
-        <h1 className="mt-3 text-2xl font-bold tracking-[-0.02em]">You&apos;re on the board.</h1>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-pretty text-muted-foreground">
-          Your {formatDollars(amountCents)} bid is live. Someone can outbid you for{" "}
-          {formatDollars(amountCents + 100)} — you&apos;ll only pay the difference to take it back.
+        <h1 className="mt-4 font-display text-3xl">
+          {rank ? `Entered at #${rank}.` : "Entered."}
+        </h1>
+        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
+          Your number stands at{" "}
+          <span className="font-mono text-foreground">{formatDollars(amountCents)}</span>. The next
+          person along pays {formatDollars(amountCents + 100)} to pass you — and you only pay the
+          gap to take it back.
         </p>
       </div>
     );
@@ -72,9 +76,9 @@ export function SuccessStatus({
   if (status === "FAILED" || status === "EXPIRED") {
     return (
       <div>
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Payment didn&apos;t go through.</h1>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-pretty text-muted-foreground">
-          Nothing was charged and no rank was claimed. Try again whenever you like.
+        <h1 className="font-display text-3xl">Nothing went through.</h1>
+        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
+          You were not charged and no position changed hands. Start again whenever you like.
         </p>
       </div>
     );
@@ -84,14 +88,14 @@ export function SuccessStatus({
     <div>
       <div className="flex items-center justify-center gap-2 text-muted-foreground">
         {!timedOut ? <Spinner className="size-4" /> : null}
-        <h1 className="text-2xl font-bold tracking-[-0.02em] text-foreground">
-          {timedOut ? "Still confirming…" : "Confirming payment…"}
+        <h1 className="font-display text-3xl text-foreground">
+          {timedOut ? "Still settling" : "Settling"}
         </h1>
       </div>
       <p className="mx-auto mt-2 max-w-sm text-sm text-pretty text-muted-foreground">
         {timedOut
-          ? "This is taking longer than usual. Your rank appears as soon as the payment confirmation arrives — no need to pay again."
-          : "Your rank goes live the moment the payment clears. This usually takes a second or two."}
+          ? "Longer than usual. Your place appears the moment the confirmation reaches us — there is no need to pay a second time."
+          : "Your place is entered as soon as the payment clears. Usually a second or two."}
       </p>
     </div>
   );

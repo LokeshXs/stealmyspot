@@ -31,7 +31,7 @@ export default async function SuccessPage({ searchParams }: PageProps<"/success"
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16 text-center">
-      <Wordmark size="sm" className="mx-auto mb-8" />
+      <Wordmark size="sm" className="mx-auto mb-10" />
       <SuccessStatus
         bidId={bid.id}
         initialStatus={bid.status}
@@ -40,9 +40,9 @@ export default async function SuccessPage({ searchParams }: PageProps<"/success"
       />
       <Link
         href="/"
-        className="mx-auto mt-8 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="mx-auto mt-10 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        ← Back to the board
+        ← back to the ledger
       </Link>
     </main>
   );

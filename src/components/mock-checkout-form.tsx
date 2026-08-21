@@ -20,13 +20,13 @@ export function MockCheckoutForm({ bidId, amountCents }: { bidId: string; amount
         body: JSON.stringify({ bidId }),
       });
       if (!res.ok) {
-        setError("Payment could not be completed.");
+        setError("That did not settle. Nothing was charged.");
         setPending(false);
         return;
       }
       router.push(`/success?bid=${bidId}`);
     } catch {
-      setError("Payment could not be completed.");
+      setError("That did not settle. Nothing was charged.");
       setPending(false);
     }
   }
@@ -34,10 +34,10 @@ export function MockCheckoutForm({ bidId, amountCents }: { bidId: string; amount
   return (
     <div className="flex flex-col gap-2">
       <Button type="button" onClick={pay} disabled={pending} className="w-full">
-        {pending ? "Processing…" : `Pay ${formatDollars(amountCents)}`}
+        {pending ? "Settling…" : `Pay ${formatDollars(amountCents)}`}
       </Button>
       {error ? (
-        <p role="alert" className="text-center text-sm text-destructive">
+        <p role="alert" className="text-xs text-destructive">
           {error}
         </p>
       ) : null}

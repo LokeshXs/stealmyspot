@@ -3,21 +3,29 @@ import { LogoMark } from "@/components/icons";
 import { branding } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
+/**
+ * The mark carries the accent colour; the name stays ink. Both halves read from
+ * env, so dropping in the real name is a one-line change.
+ */
 export function Wordmark({ className, size = "lg" }: { className?: string; size?: "sm" | "lg" }) {
   return (
     <Link
       href="/"
       className={cn(
-        "inline-flex items-center justify-center gap-2 font-medium tracking-[-0.04em]",
-        size === "lg" ? "text-[36px]" : "text-2xl",
+        "group inline-flex items-baseline gap-2 font-display tracking-[-0.02em]",
+        size === "lg" ? "text-[26px]" : "text-xl",
         className,
       )}
     >
-      <LogoMark className={size === "lg" ? "h-7" : "h-5"} />
+      <LogoMark
+        className={cn(
+          "translate-y-[3px] text-foreground transition-opacity group-hover:opacity-80",
+          size === "lg" ? "size-6" : "size-5",
+        )}
+      />
       <span>
         {branding.name}
-        <span className="text-primary">{branding.tld.slice(0, 1)}</span>
-        {branding.tld.slice(1)}
+        <span className="text-muted-foreground">{branding.tld}</span>
       </span>
     </Link>
   );

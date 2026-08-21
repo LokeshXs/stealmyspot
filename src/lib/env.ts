@@ -22,10 +22,10 @@ export const branding = {
   tld: process.env.NEXT_PUBLIC_SITE_TLD ?? ".lol",
   tagline:
     process.env.NEXT_PUBLIC_TAGLINE ??
-    "No ads, no API keys, no revenue sharing. Just outbid your competition to get to the top.",
+    "One list, ordered by price. The only thing holding a position is the number beside it.",
   taglineEmphasis:
     process.env.NEXT_PUBLIC_TAGLINE_EMPHASIS ??
-    "Will you take #1 when this site goes viral?",
+    "Nothing here is editorial. Every place on this page was paid for.",
 };
 
 export const siteTitle = `${branding.name}${branding.tld}`;

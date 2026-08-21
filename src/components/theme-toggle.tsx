@@ -4,9 +4,8 @@ import { useTheme } from "next-themes";
 import { MoonIcon, SunIcon } from "@/components/icons";
 
 /**
- * Both icons are always rendered and swapped by the `dark:` variant, so there is
- * no mounted flag and nothing to hydrate-mismatch — the class on <html> already
- * carries the answer before React runs.
+ * Both icons render and the `dark:` variant picks one, so there is no mounted
+ * flag and nothing to hydrate-mismatch — the class on <html> already has the answer.
  */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();

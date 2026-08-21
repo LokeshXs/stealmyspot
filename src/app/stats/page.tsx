@@ -6,15 +6,18 @@ import { siteTitle } from "@/lib/env";
 import { formatCount, formatDollars } from "@/lib/format";
 import { getPresenceCounts } from "@/lib/presence";
 
-export const metadata: Metadata = { title: `Live stats · ${siteTitle}` };
+export const metadata: Metadata = { title: `Figures · ${siteTitle}` };
 export const dynamic = "force-dynamic";
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Row({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="board-shadow rounded-2xl bg-card px-5 py-6">
-      <p className="text-3xl font-bold tracking-[-0.03em] text-primary tabular-nums">{value}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{label}</p>
-    </div>
+    <tr className="rule-t">
+      <th scope="row" className="py-3 pr-4 text-left text-sm font-normal text-muted-foreground">
+        {label}
+        {note ? <span className="block text-xs text-muted-foreground/60">{note}</span> : null}
+      </th>
+      <td className="py-3 text-right font-mono text-base text-foreground tabular-nums">{value}</td>
+    </tr>
   );
 }
 
@@ -22,24 +25,32 @@ export default async function StatsPage() {
   const [stats, presence] = await Promise.all([getStats(), getPresenceCounts()]);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-6 pb-16">
-      <header className="text-center">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-6 pb-12 sm:px-6">
+      <header className="rule-masthead pb-3">
         <Wordmark size="sm" />
       </header>
 
-      <h1 className="mt-10 text-3xl font-bold tracking-[-0.03em]">Live stats</h1>
-      <p className="mt-3 text-muted-foreground text-pretty">
-        Everything the board knows about itself, straight from the database.
+      <h1 className="mt-10 font-display text-4xl">Figures</h1>
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-pretty text-muted-foreground">
+        Everything the ledger knows about itself, read straight from the database at the moment you
+        loaded this page.
       </p>
 
-      <div className="mt-8 grid grid-cols-2 gap-3">
-        <Stat label="Visitors online" value={formatCount(presence.online)} />
-        <Stat label="Visitors in the last hour" value={formatCount(presence.lastHour)} />
-        <Stat label="Listings on the board" value={formatCount(stats.listingCount)} />
-        <Stat label="Clicks sent to listings" value={formatCount(stats.totalClicks)} />
-        <Stat label="Bids paid" value={formatCount(stats.bidCount)} />
-        <Stat label="Total volume" value={formatDollars(stats.volumeCents)} />
-      </div>
+      <table className="mt-8 w-full border-b border-[--rule]">
+        <caption className="sr-only">Ledger figures</caption>
+        <tbody>
+          <Row label="Reading now" value={formatCount(presence.online)} />
+          <Row label="Readers in the past hour" value={formatCount(presence.lastHour)} />
+          <Row label="Entries on the ledger" value={formatCount(stats.listingCount)} />
+          <Row label="Clicks sent onward" value={formatCount(stats.totalClicks)} />
+          <Row label="Bids settled" value={formatCount(stats.bidCount)} />
+          <Row
+            label="Total placed"
+            note="Sum of what was charged, excluding tax"
+            value={formatDollars(stats.volumeCents)}
+          />
+        </tbody>
+      </table>
 
       <SiteFooter />
     </main>
