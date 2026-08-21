@@ -12,14 +12,14 @@ export function Wordmark({ className, size = "lg" }: { className?: string; size?
     <Link
       href="/"
       className={cn(
-        "group inline-flex items-baseline gap-2 font-display tracking-[-0.02em]",
-        size === "lg" ? "text-[26px]" : "text-xl",
+        "group inline-flex items-center gap-2 font-black tracking-[-0.045em]",
+        size === "lg" ? "text-2xl" : "text-xl",
         className,
       )}
     >
       <LogoMark
         className={cn(
-          "translate-y-[3px] text-foreground transition-opacity group-hover:opacity-80",
+          "text-foreground transition-transform group-hover:-translate-y-0.5",
           size === "lg" ? "size-6" : "size-5",
         )}
       />

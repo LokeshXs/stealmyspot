@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Confetti } from "@/components/confetti";
 import { Spinner } from "@/components/icons";
 import { formatDollars } from "@/lib/format";
 
@@ -56,16 +57,17 @@ export function SuccessStatus({
 
   if (status === "PAID") {
     return (
-      <div>
-        <p className="font-mono text-6xl text-primary tabular-nums">
+      <div className="relative">
+        <Confetti />
+        <p className="text-7xl font-black text-primary tabular-nums">
           {rank ? String(rank).padStart(2, "0") : "—"}
         </p>
-        <h1 className="mt-4 font-display text-3xl">
+        <h1 className="mt-4 text-3xl font-black tracking-[-0.02em]">
           {rank ? `Entered at #${rank}.` : "Entered."}
         </h1>
         <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
           Your number stands at{" "}
-          <span className="font-mono text-foreground">{formatDollars(amountCents)}</span>. The next
+          <span className="font-semibold text-foreground">{formatDollars(amountCents)}</span>. The next
           person along pays {formatDollars(amountCents + 100)} to pass you — and you only pay the
           gap to take it back.
         </p>
@@ -76,7 +78,7 @@ export function SuccessStatus({
   if (status === "FAILED" || status === "EXPIRED") {
     return (
       <div>
-        <h1 className="font-display text-3xl">Nothing went through.</h1>
+        <h1 className="text-3xl font-black tracking-[-0.02em]">Nothing went through.</h1>
         <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
           You were not charged and no position changed hands. Start again whenever you like.
         </p>
@@ -88,7 +90,7 @@ export function SuccessStatus({
     <div>
       <div className="flex items-center justify-center gap-2 text-muted-foreground">
         {!timedOut ? <Spinner className="size-4" /> : null}
-        <h1 className="font-display text-3xl text-foreground">
+        <h1 className="text-3xl font-black tracking-[-0.02em] text-foreground">
           {timedOut ? "Still settling" : "Settling"}
         </h1>
       </div>

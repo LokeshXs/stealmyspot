@@ -31,7 +31,7 @@ export default async function OpenGraphImage() {
           height: "100%",
           background: "#0e0e13",
           color: "#f4f4f7",
-          fontFamily: "Georgia, serif",
+          fontFamily: "Helvetica, Arial, sans-serif",
           padding: 72,
         }}
       >
@@ -59,12 +59,12 @@ export default async function OpenGraphImage() {
               />
               <div style={bracket("right")} />
             </div>
-            <div style={{ display: "flex", fontSize: 62, letterSpacing: "-0.02em" }}>
+            <div style={{ display: "flex", fontSize: 62, fontWeight: 800, letterSpacing: "-0.04em" }}>
               <span style={{ display: "flex" }}>{branding.name}</span>
               <span style={{ display: "flex", color: "#a3a3b0" }}>{branding.tld}</span>
             </div>
           </div>
-          <div style={{ display: "flex", fontSize: 22, color: "#a3a3b0", letterSpacing: "0.14em" }}>
+          <div style={{ display: "flex", fontSize: 20, fontWeight: 700, color: "#a3a3b0", letterSpacing: "0.18em" }}>
             THE LEDGER
           </div>
         </div>
@@ -72,10 +72,11 @@ export default async function OpenGraphImage() {
         <div
           style={{
             display: "flex",
-            fontSize: 54,
-            lineHeight: 1.28,
+            fontSize: 56,
+            fontWeight: 800,
+            lineHeight: 1.2,
             maxWidth: 980,
-            letterSpacing: "-0.01em",
+            letterSpacing: "-0.03em",
           }}
         >
           {branding.tagline}

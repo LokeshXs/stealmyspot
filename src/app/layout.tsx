@@ -1,22 +1,16 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Instrument_Serif, Inter_Tight } from "next/font/google";
+import { Inter_Tight } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PresenceTracker } from "@/components/presence-tracker";
 import { appUrl, branding, siteTitle } from "@/lib/env";
 import "./globals.css";
 
-// Three roles: a masthead face, a UI face, and a tabular face for money.
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
+// One family for everything. Inter Tight carries 400 through 900, and its
+// tabular numerals keep the money columns aligned without a second font file.
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-});
-const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin"] });
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 const description = `${branding.tagline} ${branding.taglineEmphasis}`;
@@ -43,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${instrumentSerif.variable} ${interTight.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${interTight.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         <ThemeProvider>

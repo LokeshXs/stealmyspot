@@ -40,7 +40,7 @@ export function Avatar({
           className="size-full object-cover"
         />
       ) : (
-        <span className="flex size-full items-center justify-center font-mono text-xs text-muted-foreground">
+        <span className="flex size-full items-center justify-center text-xs font-medium text-muted-foreground">
           {fallback}
         </span>
       )}

@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: `Rules · ${siteTitle}` };
 const minimum = MIN_BID_CENTS / 100;
 
 function Num({ children }: { children: React.ReactNode }) {
-  return <span className="font-mono text-foreground tabular-nums">{children}</span>;
+  return <span className="font-semibold text-foreground tabular-nums">{children}</span>;
 }
 
 function Clause({ children }: { children: React.ReactNode }) {
@@ -24,8 +24,8 @@ function Section({ n, title, children }: { n: string; title: string; children: R
   return (
     <section className="mt-10">
       <h2 className="flex items-baseline gap-3">
-        <span className="font-mono text-xs text-muted-foreground tabular-nums">{n}</span>
-        <span className="font-display text-xl">{title}</span>
+        <span className="text-xs font-medium text-muted-foreground tabular-nums">{n}</span>
+        <span className="text-xl font-bold tracking-[-0.01em]">{title}</span>
       </h2>
       <ul className="mt-2 border-b border-[--rule]">{children}</ul>
     </section>
@@ -39,7 +39,7 @@ export default function RulesPage() {
         <Wordmark size="sm" />
       </header>
 
-      <h1 className="mt-10 font-display text-4xl">Rules</h1>
+      <h1 className="mt-10 text-4xl font-black tracking-[-0.03em]">Rules</h1>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-pretty text-muted-foreground">
         This is a ledger, not a ranking of merit. Nobody is voted up and nothing is curated. A
         position is held by a number, and a larger number takes it.

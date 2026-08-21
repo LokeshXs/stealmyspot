@@ -40,7 +40,7 @@ export default async function SuccessPage({ searchParams }: PageProps<"/success"
       />
       <Link
         href="/"
-        className="mx-auto mt-10 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+        className="mx-auto mt-10 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         ← back to the ledger
       </Link>

@@ -23,7 +23,7 @@ export function Pagination({
   return (
     <nav
       aria-label="Ledger pages"
-      className="rule-t flex items-center justify-between gap-4 py-3 font-mono text-[11px] text-muted-foreground"
+      className="rule-t flex items-center justify-between gap-4 py-3 text-[11px] font-medium text-muted-foreground"
     >
       <p className="tabular-nums">
         {total === 0 ? "no entries" : `${pad(rangeStart)}–${pad(rangeEnd)} of ${pad(total)}`}

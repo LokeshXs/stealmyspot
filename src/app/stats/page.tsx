@@ -16,7 +16,7 @@ function Row({ label, value, note }: { label: string; value: string; note?: stri
         {label}
         {note ? <span className="block text-xs text-muted-foreground/60">{note}</span> : null}
       </th>
-      <td className="py-3 text-right font-mono text-base text-foreground tabular-nums">{value}</td>
+      <td className="py-3 text-right text-base font-bold text-foreground tabular-nums">{value}</td>
     </tr>
   );
 }
@@ -30,7 +30,7 @@ export default async function StatsPage() {
         <Wordmark size="sm" />
       </header>
 
-      <h1 className="mt-10 font-display text-4xl">Figures</h1>
+      <h1 className="mt-10 text-4xl font-black tracking-[-0.03em]">Figures</h1>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-pretty text-muted-foreground">
         Everything the ledger knows about itself, read straight from the database at the moment you
         loaded this page.

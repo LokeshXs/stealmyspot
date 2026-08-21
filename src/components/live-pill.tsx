@@ -39,7 +39,7 @@ export function LivePill({
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 font-mono text-xs whitespace-nowrap text-muted-foreground"
+      className="inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap text-muted-foreground"
       title={`${formatCount(counts.lastHour)} in the past hour`}
     >
       <span className="relative inline-flex size-1.5 shrink-0">

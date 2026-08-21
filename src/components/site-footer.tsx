@@ -3,7 +3,7 @@ import { branding } from "@/lib/env";
 
 export function SiteFooter() {
   return (
-    <footer className="rule-t mt-12 flex flex-wrap items-center gap-x-4 gap-y-1 pt-3 font-mono text-[11px] text-muted-foreground">
+    <footer className="rule-t mt-12 flex flex-wrap items-center gap-x-4 gap-y-1 pt-3 text-[11px] font-medium text-muted-foreground">
       <span>
         {branding.name}
         {branding.tld}

@@ -71,24 +71,43 @@ Three things the implementation is careful about:
 3. **Deliveries are idempotent.** Dodo retries up to 8 times and may arrive out of order, so every
    delivery is recorded by its `webhook-id` header first; a repeat returns `200` and changes nothing.
 
-## Design system — "editorial ledger"
+## Design system
 
-The organising idea is a **public ledger of what people paid to be seen**, not a consumer-app
-leaderboard. Structure comes from hairline rules and tabular numerals; nothing on the page carries a
-soft shadow.
+The page is built around one job: **place a bid**. A hero band puts a huge nudgeable number above
+the ledger, and a sticky bar keeps that call to action on screen once you scroll into the listings.
 
 Every token lives in `:root` / `.dark` in [`src/app/globals.css`](src/app/globals.css) — violet on
-cool slate, `--radius: 0.25rem`, plus `--rule` / `--rule-strong` for the ink-toned dividers and
-`--accent-bar` for the leading row's margin marker. Token *names* mirror shadcn/ui, so swapping the
+cool slate, plus the pieces that give it character: `--shadow-hard` (a solid offset shadow that
+collapses on press), `--marker` (the highlighter stroke in the headline), `--rank-1/2/3` (podium
+tints) and `--rule` for the ledger hairlines. Token *names* mirror shadcn/ui, so swapping the
 palette is a one-file change.
 
-Three type roles, all via `next/font`: **Instrument Serif** for the masthead and headings,
-**Inter Tight** for UI and body, **IBM Plex Mono** for money, ranks and anything tabular.
+One typeface: **Inter Tight**, 400–900, via `next/font`. Figures use `tabular-nums` so money
+columns stay aligned.
 
-Layout is a masthead → dateline → two-column grid. The bid composer is first in source order so it
-sits above the ledger on a phone, and `lg:order-2` swings it into a sticky right rail on desktop.
-Board state lives in [`board-context.tsx`](src/components/board-context.tsx) so the composer and the
-listing table can occupy sibling columns and still agree on the current ranks.
+### Structure
+
+`masthead → dateline → hero → [ledger | rail]`, with a sticky bid bar once the hero scrolls away.
+
+Two contexts do the state work:
+
+- [`board-context.tsx`](src/components/board-context.tsx) — the live board, its 30s poll, and the
+  "updated Ns ago" freshness clock.
+- [`bid-form-context.tsx`](src/components/bid-form-context.tsx) — amount, address, pending and
+  error. The hero and the sticky bar are two renderings of **one** form; without this they would
+  drift out of sync.
+
+`motion` drives the rolling digits, the sticky bar, row reordering after a bid, and the confetti on
+a won bid. Every one of them checks `useReducedMotion()`, and `globals.css` carries a
+`prefers-reduced-motion` guard for CSS transitions.
+
+Two layout details that are load-bearing:
+
+- The composer is first in source order so a phone shows it above the ledger; `lg:order-2` swings it
+  into the right rail on desktop.
+- Both grid columns carry `min-w-0`. Grid items default to `min-width: auto`, so the truncated
+  (`white-space: nowrap`) listing descriptions would otherwise size the track to their full
+  unwrapped width and push a phone into horizontal scroll.
 
 The name is still undecided, so branding is env-driven: `NEXT_PUBLIC_SITE_NAME`,
 `NEXT_PUBLIC_SITE_TLD`, `NEXT_PUBLIC_TAGLINE`, `NEXT_PUBLIC_TAGLINE_EMPHASIS`. The logo mark is

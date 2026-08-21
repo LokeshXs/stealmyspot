@@ -31,14 +31,23 @@
   --input: #e5e5ec;
   --ring: #6d5cf6;
 
-  /* Precise, not friendly. */
-  --radius: 0.25rem;
+  --radius: 0.5rem;
 
-  /* Ink-toned dividers, so rules read as printed rather than as UI chrome. */
+  /* Ink-toned dividers — hairlines are what make the ledger density work. */
   --rule: color-mix(in oklab, var(--foreground) 12%, transparent);
   --rule-strong: color-mix(in oklab, var(--foreground) 82%, transparent);
   /* Left marker on the leading row. */
   --accent-bar: var(--primary);
+
+  /* Solid offset shadow. Collapses on press so buttons feel physical. */
+  --shadow-hard: 3px 3px 0 0 var(--foreground);
+  --shadow-hard-sm: 2px 2px 0 0 var(--foreground);
+  /* Highlighter stroke swept behind key words. */
+  --marker: color-mix(in oklab, var(--primary) 26%, transparent);
+  /* Podium tints for the top three rank tiles. */
+  --rank-1: color-mix(in oklab, var(--primary) 20%, transparent);
+  --rank-2: color-mix(in oklab, var(--primary) 11%, transparent);
+  --rank-3: color-mix(in oklab, var(--primary) 6%, transparent);
 }
 
 .dark {
@@ -65,6 +74,14 @@
 
   --rule: color-mix(in oklab, var(--foreground) 16%, transparent);
   --rule-strong: color-mix(in oklab, var(--foreground) 70%, transparent);
+
+  /* On a near-black ground an ink shadow is invisible, so it inverts to light. */
+  --shadow-hard: 3px 3px 0 0 color-mix(in oklab, var(--foreground) 55%, transparent);
+  --shadow-hard-sm: 2px 2px 0 0 color-mix(in oklab, var(--foreground) 55%, transparent);
+  --marker: color-mix(in oklab, var(--primary) 34%, transparent);
+  --rank-1: color-mix(in oklab, var(--primary) 26%, transparent);
+  --rank-2: color-mix(in oklab, var(--primary) 15%, transparent);
+  --rank-3: color-mix(in oklab, var(--primary) 8%, transparent);
 }
 
 @theme inline {
@@ -90,15 +107,16 @@
   --color-ring: var(--ring);
   --color-rule: var(--rule);
   --color-rule-strong: var(--rule-strong);
+  --color-marker: var(--marker);
+  --color-rank-1: var(--rank-1);
+  --color-rank-2: var(--rank-2);
+  --color-rank-3: var(--rank-3);
 
-  /* Masthead and headings / UI and body / anything tabular. */
-  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
-  --radius-sm: calc(var(--radius) - 1px);
+  --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
+  --radius-lg: calc(var(--radius) + 4px);
 }
 
 @layer base {
@@ -134,4 +152,42 @@
 /* The heavier rule under the masthead. */
 @utility rule-masthead {
   border-bottom: 2px solid var(--rule-strong);
+}
+
+/* Chunky press: the shadow collapses and the element drops into it. */
+@utility shadow-hard {
+  box-shadow: var(--shadow-hard);
+}
+
+@utility shadow-hard-sm {
+  box-shadow: var(--shadow-hard-sm);
+}
+
+/*
+ * Highlighter stroke behind a word. Sits under the text baseline rather than
+ * covering it, so contrast is unaffected.
+ */
+@utility marker-stroke {
+  background-image: linear-gradient(var(--marker), var(--marker));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 100% 0.36em;
+  padding-inline: 0.08em;
+}
+
+@layer base {
+  /* Numerals are everywhere here; never let them jitter as figures tick. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

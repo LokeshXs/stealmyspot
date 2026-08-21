@@ -34,12 +34,12 @@ export default async function MockCheckoutPage({ params }: PageProps<"/checkout/
       <Wordmark size="sm" className="mx-auto mb-10" />
 
       <div className="rounded-md border border-border">
-        <p className="rule-b px-4 py-2 font-mono text-[10px] tracking-[0.14em] text-muted-foreground uppercase">
+        <p className="rule-b px-4 py-2 text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">
           Stand-in checkout
         </p>
 
         <div className="p-4">
-          <h1 className="font-display text-2xl">
+          <h1 className="text-2xl font-black tracking-[-0.02em]">
             {isTakeover ? "Reserve the front page" : `Position #${rank}`}
           </h1>
 
@@ -50,19 +50,19 @@ export default async function MockCheckoutPage({ params }: PageProps<"/checkout/
             </div>
             <div className="rule-t flex items-baseline justify-between gap-4 py-2.5">
               <dt className="text-muted-foreground">Your number</dt>
-              <dd className="font-mono tabular-nums">{formatDollars(bid.amountCents)}</dd>
+              <dd className="font-semibold tabular-nums">{formatDollars(bid.amountCents)}</dd>
             </div>
             {bid.paidCents !== bid.amountCents ? (
               <div className="rule-t flex items-baseline justify-between gap-4 py-2.5">
                 <dt className="text-muted-foreground">Already standing</dt>
-                <dd className="font-mono tabular-nums">
+                <dd className="font-semibold tabular-nums">
                   −{formatDollars(bid.amountCents - bid.paidCents)}
                 </dd>
               </div>
             ) : null}
             <div className="rule-t flex items-baseline justify-between gap-4 py-2.5">
               <dt className="font-medium">Due now</dt>
-              <dd className="font-mono text-lg text-primary tabular-nums">
+              <dd className="text-lg font-black text-primary tabular-nums">
                 {formatDollars(bid.paidCents)}
               </dd>
             </div>
@@ -90,7 +90,7 @@ export default async function MockCheckoutPage({ params }: PageProps<"/checkout/
 
       <Link
         href="/"
-        className="mx-auto mt-6 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+        className="mx-auto mt-6 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         ← abandon
       </Link>

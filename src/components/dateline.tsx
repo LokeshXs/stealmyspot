@@ -19,7 +19,7 @@ export function Dateline({ volumeCents }: { volumeCents: number }) {
   ];
 
   return (
-    <div className="rule-b flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2 font-mono text-[11px] text-muted-foreground">
+    <div className="rule-b flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2 text-[11px] font-medium text-muted-foreground">
       <p className="flex flex-wrap items-center gap-x-2 tabular-nums">
         {items.map((item, i) => (
           <span key={item} className="flex items-center gap-2">
