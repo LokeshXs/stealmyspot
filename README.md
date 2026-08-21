@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# outbid
 
-## Getting Started
+A pay-to-rank public leaderboard — a working replica of [outbid.lol](https://outbid.lol/).
 
-First, run the development server:
+There are no accounts, no ads, and no revenue share. **Your bid is your rank.** Pay more than the
+current #1 and you sit at #1; pay less and you land wherever that amount places you.
+
+---
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+docker compose up -d          # Postgres 17 on :5432
+cp .env.example .env
+pnpm prisma migrate dev
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The board opens **empty**, with #1 going for **$1**. `PAYMENT_PROVIDER=mock` is the default, so the
+whole bid → pay → rank flow works with no Dodo account and no tunnel.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+|---|---|
+| `pnpm dev` / `pnpm build` | Next.js dev server / production build |
+| `pnpm test` | Vitest unit suite for the ranking and identity rules |
+| `pnpm lint` | ESLint |
+| `pnpm db:studio` | Prisma Studio |
+| `pnpm tsx scripts/inspect.ts` | Dump listings, bids and takeovers |
+| `pnpm tsx scripts/seed-demo.ts 60` | Insert 60 fake listings to exercise pagination |
+| `pnpm tsx scripts/reset.ts` | Wipe the board back to empty |
+| `pnpm tsx scripts/test-webhook.ts <bidId>` | Post a correctly-signed Dodo webhook at the local app |
 
-## Learn More
+## How ranking works
 
-To learn more about Next.js, take a look at the following resources:
+All of it lives in [`src/lib/ranking.ts`](src/lib/ranking.ts) as pure functions, unit-tested in
+[`src/lib/__tests__/ranking.test.ts`](src/lib/__tests__/ranking.test.ts).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Order is `amountCents DESC, rankedAt ASC` — **equal bids keep placement order**, the older one wins.
+- A new listing pays its full bid. Raising your own listing **pays only the difference**; a stranger
+  bidding the same total pays the full amount, so nobody buys your rank for the delta.
+- A **takeover** costs 2× the current #1, pins that listing at #1, and freezes the rest of page 1
+  against a snapshot for 3 hours. New bids join from page 2 until the window closes.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Identity normalization ([`src/lib/identity.ts`](src/lib/identity.ts)) turns free text into a stable
+key: query strings and `www.` are stripped, `x.com/foo` and `@Foo` collapse to `x:foo`, platform
+hosts like `github.com` keep their path so two repos don't share a bid, and chat/adult links are
+rejected while shorteners are resolved to their destination.
 
-## Deploy on Vercel
+## Payments (Dodo)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Bids are arbitrary amounts, which rules out fixed-price products. Dodo supports this through a
+**Pay What You Want** product whose price is set per checkout session.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**One-time dashboard setup:** create a one-time product ("Leaderboard rank"), pricing type
+**Single Payment**, **Pay What You Want** on, **Minimum Price $1.00**. Put its `pdt_…` id in
+`DODO_PRODUCT_ID`. Every bid of every size reuses that one product — the amount rides on
+`product_cart[].amount` (in cents).
+
+Then set `PAYMENT_PROVIDER=dodo`, fill in `DODO_PAYMENTS_API_KEY` and `DODO_PAYMENTS_WEBHOOK_KEY`,
+and point the Dodo webhook at `<your-url>/api/webhooks/dodo` (locally: `ngrok http 3000`).
+
+Three things the implementation is careful about:
+
+1. **Rank comes from our own `bid.amountCents`, never the webhook's `total_amount`.** Dodo is the
+   merchant of record and adds sales tax on top, so the charged total is not the bid. A $1 bid must
+   show as `$1`, not `$1.19`.
+2. **Only the webhook publishes a listing.** `return_url` can beat the webhook, so `/success` polls
+   the bid and shows "confirming payment…" rather than claiming success.
+3. **Deliveries are idempotent.** Dodo retries up to 8 times and may arrive out of order, so every
+   delivery is recorded by its `webhook-id` header first; a repeat returns `200` and changes nothing.
+
+## Design system
+
+Every colour lives in `:root` / `.dark` in [`src/app/globals.css`](src/app/globals.css) — violet on
+cool slate, with full dark mode. Token *names* mirror shadcn/ui, so swapping the palette is a
+one-file change.
+
+The name is still undecided, so branding is env-driven: `NEXT_PUBLIC_SITE_NAME`,
+`NEXT_PUBLIC_SITE_TLD`, `NEXT_PUBLIC_TAGLINE`, `NEXT_PUBLIC_TAGLINE_EMPHASIS`.
+
+## Notes
+
+- **No user accounts**, same as the original. The submitted URL/@handle *is* the identity — anyone
+  who re-submits it and pays the difference controls that listing.
+- The mock checkout at `/checkout/[bidId]` and `/api/payments/mock/complete` hard-fail whenever
+  `PAYMENT_PROVIDER !== "mock"`, so they can never publish a listing in production.
+- The metadata scraper follows user-supplied URLs, so it re-resolves every redirect hop and rejects
+  private address space (`src/lib/metadata.ts`).
+- Refunds and disputes are recorded in `WebhookEvent` but not yet acted on — pulling a refunded
+  listing off the board is the obvious next step.

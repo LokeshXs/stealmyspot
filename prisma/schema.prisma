@@ -1,0 +1,126 @@
+// Outbid — pay-to-rank leaderboard.
+// Rank is derived purely from `Listing.amountCents`; nothing else moves a row.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum IdentityType {
+  WEBSITE
+  X
+}
+
+enum ListingStatus {
+  PENDING
+  PUBLISHED
+}
+
+enum BidKind {
+  BID
+  TAKEOVER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+}
+
+/// A claimed rank on the board. Only PUBLISHED rows are ever shown —
+/// a listing is created PENDING at checkout and only flips once payment clears.
+model Listing {
+  id           String        @id @default(uuid())
+  identityType IdentityType
+  /// "website:example.com" | "x:handle" — the dedupe key, see src/lib/identity.ts
+  identityKey  String        @unique
+  sourceUrl    String
+  displayName  String?
+  description  String?
+  imageUrl     String?
+  amountCents  Int           @default(0)
+  status       ListingStatus @default(PENDING)
+  /// Set on every PAID raise. Doubles as the rank tiebreak (older wins)
+  /// and as the "9 hours ago" timestamp on the row.
+  rankedAt     DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  clickCount   Int           @default(0)
+
+  bids      Bid[]
+  takeovers Takeover[]
+  clicks    ClickEvent[]
+
+  @@index([status, amountCents(sort: Desc), rankedAt])
+}
+
+model Bid {
+  id            String        @id @default(uuid())
+  listingId     String
+  listing       Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  /// The resulting TOTAL bid — this is what sets the rank.
+  amountCents   Int
+  /// What we actually charge (only the difference on a re-bid).
+  paidCents     Int
+  kind          BidKind       @default(BID)
+  status        PaymentStatus @default(PENDING)
+  provider      String        @default("mock")
+  /// Dodo checkout session_id
+  sessionId     String?       @unique
+  /// Dodo payment_id, arrives with the webhook
+  paymentId     String?       @unique
+  customerEmail String?
+  createdAt     DateTime      @default(now())
+  paidAt        DateTime?
+
+  @@index([listingId, createdAt])
+  @@index([status])
+}
+
+/// Idempotency ledger. Dodo retries a webhook up to 8 times and may deliver
+/// out of order, so every delivery is recorded by its `webhook-id` header first.
+model WebhookEvent {
+  id          String    @id
+  type        String
+  payload     Json
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+}
+
+/// A paid takeover pins its listing at #1 and freezes page 1 for 3 hours.
+model Takeover {
+  id          String   @id @default(uuid())
+  listingId   String
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  amountCents Int
+  startsAt    DateTime @default(now())
+  endsAt      DateTime
+  /// Page-1 order snapshotted at takeover start.
+  frozenIds   String[]
+
+  @@index([endsAt])
+}
+
+model ClickEvent {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  ipHash    String?
+
+  @@index([listingId, createdAt])
+}
+
+model Presence {
+  sessionId   String   @id
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+
+  @@index([lastSeenAt])
+  @@index([firstSeenAt])
+}

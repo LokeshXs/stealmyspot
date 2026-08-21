@@ -1,0 +1,49 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { SuccessStatus } from "@/components/success-status";
+import { Wordmark } from "@/components/wordmark";
+import { db } from "@/lib/db";
+import { PaymentStatus } from "@/generated/prisma/enums";
+import { rankOfListing } from "@/lib/rank-lookup";
+
+export const dynamic = "force-dynamic";
+
+/**
+ * Dodo's return_url lands here. The redirect can beat the webhook, so this page
+ * never claims success on its own — it polls the bid until the webhook confirms.
+ */
+export default async function SuccessPage({ searchParams }: PageProps<"/success">) {
+  const params = await searchParams;
+  const raw = Array.isArray(params.bid) ? params.bid[0] : params.bid;
+  if (!raw) notFound();
+
+  const bid = await db.bid.findUnique({
+    where: { id: raw },
+    select: { id: true, status: true, amountCents: true, listingId: true },
+  });
+
+  if (!bid) notFound();
+
+  // When the webhook has already landed there is nothing to poll for — resolve
+  // the rank here so the page shows "#1" on first paint rather than after a tick.
+  const initialRank =
+    bid.status === PaymentStatus.PAID ? await rankOfListing(bid.listingId) : null;
+
+  return (
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16 text-center">
+      <Wordmark size="sm" className="mx-auto mb-8" />
+      <SuccessStatus
+        bidId={bid.id}
+        initialStatus={bid.status}
+        initialRank={initialRank}
+        amountCents={bid.amountCents}
+      />
+      <Link
+        href="/"
+        className="mx-auto mt-8 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        ← Back to the board
+      </Link>
+    </main>
+  );
+}

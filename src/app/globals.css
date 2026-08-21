@@ -1,26 +1,113 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens — the single source of truth for the whole site.
+ * Token *names* mirror shadcn/ui so component classes stay portable;
+ * the palette is ours (violet on cool slate). Swap the values here to rebrand.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbfbfd;
+  --foreground: #17171f;
+  --card: #ffffff;
+  --card-foreground: #17171f;
+  --popover: #ffffff;
+  --popover-foreground: #17171f;
+  --primary: #6d5cf6;
+  --primary-foreground: #ffffff;
+  --live: #16a34a;
+  --secondary: #f2f2f6;
+  --secondary-foreground: #17171f;
+  --muted: #f2f2f6;
+  --muted-foreground: #63636f;
+  --accent: #f2f2f6;
+  --accent-foreground: #17171f;
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+  --border: #e5e5ec;
+  --input: #e5e5ec;
+  --ring: #6d5cf6;
+  --radius: 0.875rem;
+  --board-shadow: 0 12px 50px rgb(23 23 31 / 0.08);
+}
+
+.dark {
+  --background: #0e0e13;
+  --foreground: #f4f4f7;
+  --card: #17171f;
+  --card-foreground: #f4f4f7;
+  --popover: #17171f;
+  --popover-foreground: #f4f4f7;
+  --primary: #8b7bff;
+  --primary-foreground: #ffffff;
+  --live: #4ade80;
+  --secondary: #1e1e28;
+  --secondary-foreground: #f4f4f7;
+  --muted: #1e1e28;
+  --muted-foreground: #a3a3b0;
+  --accent: #1e1e28;
+  --accent-foreground: #f4f4f7;
+  --destructive: #fb7185;
+  --destructive-foreground: #17171f;
+  --border: rgb(255 255 255 / 0.10);
+  --input: rgb(255 255 255 / 0.15);
+  --ring: #8b7bff;
+  --board-shadow: 0 12px 50px rgb(0 0 0 / 0.45);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-live: var(--live);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Numerals should never jitter as bids tick up. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility board-shadow {
+  box-shadow: var(--board-shadow);
 }
