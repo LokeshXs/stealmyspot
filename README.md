@@ -30,6 +30,7 @@ whole bid → pay → rank flow works with no Dodo account and no tunnel.
 | `pnpm tsx scripts/inspect.ts` | Dump listings, bids and takeovers |
 | `pnpm tsx scripts/seed-demo.ts 60` | Insert 60 fake listings to exercise pagination |
 | `pnpm tsx scripts/reset.ts` | Wipe the board back to empty |
+| `pnpm logo:export` | Rasterise the mark to `public/*.png` for the Dodo checkout, app stores, press |
 | `pnpm tsx scripts/test-webhook.ts <bidId>` | Post a correctly-signed Dodo webhook at the local app |
 
 ## How ranking works
