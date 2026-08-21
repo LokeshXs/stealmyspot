@@ -30,7 +30,7 @@ export function SiteFooter() {
         </a>
       </nav>
 
-      <span className="text-[11px]">
+      <span className="text-xs">
         Built by{" "}
         <a
           href="https://x.com/ShipItLokesh"
@@ -39,6 +39,18 @@ export function SiteFooter() {
           className="font-semibold text-foreground transition-colors hover:text-primary focus-visible:text-primary focus-visible:outline-none"
         >
           ShipItLokesh
+        </a>
+      </span>
+
+      <span className="text-xs">
+        Inspired from{" "}
+        <a
+          href="https://outbid.lol/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-foreground transition-colors hover:text-primary focus-visible:text-primary focus-visible:outline-none"
+        >
+          outbid.lol
         </a>
       </span>
 

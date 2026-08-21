@@ -5,10 +5,13 @@ import {
   applyTakeover,
   clampPage,
   nextTopBidCents,
+  partitionTakeover,
   previewRank,
   quoteBid,
   sortBoard,
   takeoverPriceCents,
+  takeoverEndsAt,
+  takeoverRankOf,
   topBidCents,
   totalPages,
   type RankableListing,
@@ -187,6 +190,12 @@ describe("takeoverPriceCents", () => {
   });
 });
 
+describe("takeover duration", () => {
+  it("expires exactly one hour after settlement", () => {
+    expect(takeoverEndsAt(at("2026-01-01T12:00:00Z"))).toEqual(at("2026-01-01T13:00:00Z"));
+  });
+});
+
 describe("applyTakeover", () => {
   const sorted = sortBoard([
     listing("a", 100, "2026-01-01T00:00:00Z"),
@@ -234,6 +243,40 @@ describe("applyTakeover", () => {
       now,
     );
     expect(out.map((l) => l.id)).toEqual(["c", "a", "b"]);
+  });
+});
+
+describe("partitionTakeover", () => {
+  it("fills an open page-one slot and freezes the new listing there", () => {
+    const sorted = sortBoard([
+      listing("queued", 999, "2026-01-01T00:30:00Z"),
+      listing("old", 5, "2026-01-01T00:00:00Z"),
+      listing("holder", 2, "2026-01-01T00:10:00Z"),
+    ]);
+    const partition = partitionTakeover(sorted, {
+      listingId: "holder",
+      endsAt: at("2026-01-01T02:00:00Z"),
+      frozenIds: ["old"],
+    });
+    expect(partition.frozen.map((item) => item.id)).toEqual(["holder", "old", "queued"]);
+    expect(partition.queued).toEqual([]);
+    expect(takeoverRankOf("holder", partition)).toBe(1);
+    expect(takeoverRankOf("old", partition)).toBe(2);
+    expect(takeoverRankOf("queued", partition)).toBe(3);
+  });
+
+  it("queues only listings beyond 50 occupied page-one positions", () => {
+    const listings = Array.from({ length: 51 }, (_, index) =>
+      listing(`listing-${index}`, 1_000 - index, `2026-01-01T00:00:${String(index).padStart(2, "0")}Z`),
+    );
+    const partition = partitionTakeover(sortBoard(listings), {
+      listingId: "listing-0",
+      endsAt: at("2026-01-01T02:00:00Z"),
+      frozenIds: listings.slice(1, 50).map((item) => item.id),
+    });
+    expect(partition.frozen).toHaveLength(50);
+    expect(partition.queued.map((item) => item.id)).toEqual(["listing-50"]);
+    expect(takeoverRankOf("listing-50", partition)).toBe(51);
   });
 });
 

@@ -2,12 +2,12 @@ import "server-only";
 
 import { db } from "@/lib/db";
 import { ListingStatus, PaymentStatus } from "@/generated/prisma/enums";
-import { labelForKey } from "@/lib/identity";
+import { imageForIdentity, labelForKey } from "@/lib/identity";
 import {
   PAGE_SIZE,
-  applyTakeover,
   clampPage,
   nextTopBidCents,
+  partitionTakeover,
   sortBoard,
   takeoverPriceCents,
   topBidCents,
@@ -29,6 +29,18 @@ export interface BoardEntry {
   clickCount: number;
   rankedAt: string;
   isTakeover: boolean;
+  takeoverState: "HOLDER" | "FROZEN" | "QUEUED" | null;
+}
+
+export interface TakeoverSummary {
+  listingId: string;
+  label: string;
+  imageUrl: string | null;
+  sourceUrl: string;
+  amountCents: number;
+  endsAt: string;
+  occupiedCount: number;
+  queuedCount: number;
 }
 
 export interface BoardPage {
@@ -42,6 +54,10 @@ export interface BoardPage {
   nextBidCents: number;
   takeoverPriceCents: number;
   takeoverEndsAt: string | null;
+  takeover: TakeoverSummary | null;
+  queuedAmountsCents: number[];
+  /** Complete live ledger used for honest post-reservation rank projections. */
+  rankingAmountsCents: number[];
 }
 
 async function activeTakeover() {
@@ -78,32 +94,59 @@ export async function getBoardPage(requestedPage: number): Promise<BoardPage> {
     activeTakeover(),
   ]);
 
-  const ordered = applyTakeover(sortBoard(listings), takeover);
-  const total = ordered.length;
-  const page = clampPage(requestedPage, total);
-  const start = (page - 1) * PAGE_SIZE;
-  const slice = ordered.slice(start, start + PAGE_SIZE);
+  const sorted = sortBoard(listings);
+  const total = sorted.length;
+  const partition = takeover ? partitionTakeover(sorted, takeover) : null;
+  const takeoverPageCount = partition
+    ? Math.max(1, 1 + Math.ceil(partition.queued.length / PAGE_SIZE))
+    : null;
+  const page = takeoverPageCount
+    ? Math.min(Math.max(1, Math.floor(requestedPage)), takeoverPageCount)
+    : clampPage(requestedPage, total);
+  const queuedStart = Math.max(0, (page - 2) * PAGE_SIZE);
+  const start = partition
+    ? page === 1
+      ? 0
+      : partition.frozen.length + queuedStart
+    : (page - 1) * PAGE_SIZE;
+  const slice = partition
+    ? page === 1
+      ? partition.frozen
+      : partition.queued.slice(queuedStart, queuedStart + PAGE_SIZE)
+    : sorted.slice(start, start + PAGE_SIZE);
+  const holder = partition?.frozen[0] ?? null;
 
   const top = topBidCents(listings);
 
   return {
     entries: slice.map((listing, index) => ({
       id: listing.id,
-      rank: start + index + 1,
+      rank: partition
+        ? page === 1
+          ? index + 1
+          : PAGE_SIZE + queuedStart + index + 1
+        : start + index + 1,
       identityType: listing.identityType,
       identityKey: listing.identityKey,
       sourceUrl: listing.sourceUrl,
       label: labelForKey(listing.identityKey),
       displayName: listing.displayName,
       description: listing.description,
-      imageUrl: listing.imageUrl,
+      imageUrl: imageForIdentity(listing.identityType, listing.imageUrl),
       amountCents: listing.amountCents,
       clickCount: listing.clickCount,
       rankedAt: listing.rankedAt.toISOString(),
       isTakeover: takeover?.listingId === listing.id,
+      takeoverState: partition
+        ? takeover?.listingId === listing.id
+          ? "HOLDER"
+          : page === 1
+            ? "FROZEN"
+            : "QUEUED"
+        : null,
     })),
     page,
-    pageCount: totalPages(total),
+    pageCount: takeoverPageCount ?? totalPages(total),
     total,
     rangeStart: total === 0 ? 0 : start + 1,
     rangeEnd: Math.min(start + PAGE_SIZE, total),
@@ -111,6 +154,20 @@ export async function getBoardPage(requestedPage: number): Promise<BoardPage> {
     nextBidCents: nextTopBidCents(top),
     takeoverPriceCents: takeoverPriceCents(top),
     takeoverEndsAt: takeover?.endsAt.toISOString() ?? null,
+    takeover: takeover && holder && partition
+      ? {
+          listingId: holder.id,
+          label: labelForKey(holder.identityKey),
+          imageUrl: imageForIdentity(holder.identityType, holder.imageUrl),
+          sourceUrl: holder.sourceUrl,
+          amountCents: takeover.amountCents,
+          endsAt: takeover.endsAt.toISOString(),
+          occupiedCount: partition.frozen.length,
+          queuedCount: partition.queued.length,
+        }
+      : null,
+    queuedAmountsCents: partition ? partition.queued.map((listing) => listing.amountCents) : [],
+    rankingAmountsCents: sorted.map((listing) => listing.amountCents),
   };
 }
 

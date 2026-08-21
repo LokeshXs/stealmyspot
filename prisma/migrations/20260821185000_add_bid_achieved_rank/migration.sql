@@ -1,0 +1,1 @@
+ALTER TABLE "Bid" ADD COLUMN "achievedRank" INTEGER;

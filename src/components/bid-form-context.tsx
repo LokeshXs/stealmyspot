@@ -3,14 +3,17 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
   useTransition,
 } from "react";
+import type { ListingPreviewResponse } from "@/app/api/listing-preview/route";
 import { useBoard } from "@/components/board-context";
-import { startTakeover, submitBid } from "@/app/actions";
+import { submitBid } from "@/app/actions";
 import { parseDollarsToCents } from "@/lib/format";
+import { normalizeIdentitySync } from "@/lib/identity";
 import { MAX_BID_CENTS, MIN_BID_CENTS } from "@/lib/ranking";
 
 /**
@@ -26,6 +29,8 @@ interface BidFormValue {
   setAmount: (value: string) => void;
   identity: string;
   setIdentity: (value: string) => void;
+  identityPreview: ListingPreviewResponse | null;
+  identityPreviewLoading: boolean;
   step: (delta: number) => void;
   amountCents: number;
   validAmount: boolean;
@@ -34,7 +39,6 @@ interface BidFormValue {
   pending: boolean;
   error: string | null;
   submit: () => void;
-  takeover: () => void;
   /** Focused when a submit is attempted with an empty address. */
   identityRef: React.RefObject<HTMLInputElement | null>;
 }
@@ -48,19 +52,64 @@ const BidFormContext = createContext<BidFormValue | null>(null);
 export function BidFormProvider({ children }: { children: React.ReactNode }) {
   const { board } = useBoard();
   const [amount, setAmount] = useState(() => String(Math.round(board.nextBidCents / 100)));
-  const [identity, setIdentity] = useState("");
+  const [identity, setIdentityValue] = useState("");
+  const [identityPreview, setIdentityPreview] = useState<ListingPreviewResponse | null>(null);
+  const [identityPreviewLoading, setIdentityPreviewLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const identityRef = useRef<HTMLInputElement | null>(null);
+  const previewCache = useRef(new Map<string, ListingPreviewResponse>());
 
-  const amounts = useMemo(() => board.entries.map((e) => e.amountCents), [board.entries]);
+  function setIdentity(value: string) {
+    setIdentityValue(value);
+    setIdentityPreview(null);
+    setIdentityPreviewLoading(false);
+  }
+
+  useEffect(() => {
+    const input = identity.trim();
+    if (!input || input.length > 300 || !normalizeIdentitySync(input).ok) return;
+
+    const cached = previewCache.current.get(input);
+    if (cached) {
+      const task = window.setTimeout(() => setIdentityPreview(cached), 0);
+      return () => window.clearTimeout(task);
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setIdentityPreviewLoading(true);
+      try {
+        const response = await fetch(`/api/listing-preview?identity=${encodeURIComponent(input)}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const preview = (await response.json()) as ListingPreviewResponse;
+        previewCache.current.set(input, preview);
+        setIdentityPreview(preview);
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setIdentityPreview(null);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIdentityPreviewLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [identity]);
+
+  const amounts = board.rankingAmountsCents;
   const amountCents = useMemo(() => parseDollarsToCents(amount), [amount]);
   const validAmount =
     Number.isFinite(amountCents) &&
     amountCents >= MIN_BID_CENTS &&
     amountCents <= MAX_BID_CENTS;
   const rank = useMemo(
-    () => (validAmount ? rankFor(amountCents, amounts) : 1),
+    () => validAmount ? rankFor(amountCents, amounts) : 1,
     [validAmount, amountCents, amounts],
   );
 
@@ -94,11 +143,6 @@ export function BidFormProvider({ children }: { children: React.ReactNode }) {
     run(() => submitBid({ identity, amountCents }));
   }
 
-  function takeover() {
-    if (!requireIdentity("Enter the address you want held on page one.")) return;
-    run(() => startTakeover({ identity }));
-  }
-
   return (
     <BidFormContext
       value={{
@@ -106,6 +150,8 @@ export function BidFormProvider({ children }: { children: React.ReactNode }) {
         setAmount,
         identity,
         setIdentity,
+        identityPreview,
+        identityPreviewLoading,
         step,
         amountCents,
         validAmount,
@@ -113,7 +159,6 @@ export function BidFormProvider({ children }: { children: React.ReactNode }) {
         pending,
         error,
         submit,
-        takeover,
         identityRef,
       }}
     >

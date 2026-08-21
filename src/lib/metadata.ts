@@ -251,6 +251,43 @@ export async function scrapeMetadata(url: string): Promise<ScrapedMetadata> {
 }
 
 /**
+ * Loads a small public raster image for server-generated cards. Returning a
+ * data URL means ImageResponse never performs an unguarded second fetch.
+ */
+export async function fetchPublicImageDataUrl(url: string): Promise<string | null> {
+  try {
+    const { response } = await safeFetch(url, {
+      headers: { accept: "image/png,image/jpeg,image/webp,image/gif" },
+    });
+    if (!response.ok || !response.body) return null;
+
+    const contentType = (response.headers.get("content-type") ?? "").split(";")[0];
+    const allowed = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+    if (!allowed.has(contentType)) return null;
+
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    try {
+      while (total <= MAX_BYTES) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > MAX_BYTES) return null;
+        chunks.push(value);
+      }
+    } finally {
+      await reader.cancel().catch(() => {});
+    }
+
+    const bytes = Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)));
+    return `data:${contentType};base64,${bytes.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Follows a shortener to its destination. Used by `normalizeIdentity`;
  * returns null when the link is dead or points somewhere we refuse to go.
  */

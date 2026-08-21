@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { RollingNumber } from "@/components/rolling-number";
+import { IdentityPreviewIcon } from "@/components/identity-preview-icon";
 import { useBidForm, digitsOnly } from "@/components/bid-form-context";
 import { Button } from "@/components/ui/button";
 import { MIN_BID_CENTS } from "@/lib/ranking";
@@ -12,7 +13,17 @@ import { MIN_BID_CENTS } from "@/lib/ranking";
  */
 export function StickyBidBar({ visible }: { visible: boolean }) {
   // The amount is nudged with the steppers here; the hero owns the text field.
-  const { amount, identity, setIdentity, step, validAmount, rank, pending, submit } = useBidForm();
+  const {
+    amount,
+    identity,
+    setIdentity,
+    identityPreview,
+    identityPreviewLoading,
+    step,
+    validAmount,
+    pending,
+    submit,
+  } = useBidForm();
   const reduceMotion = useReducedMotion();
 
   const dollars = Number.parseInt(digitsOnly(amount) || "0", 10);
@@ -61,19 +72,25 @@ export function StickyBidBar({ visible }: { visible: boolean }) {
               </Button>
             </div>
 
-            <input
-              value={identity}
-              onChange={(e) => setIdentity(e.target.value)}
-              placeholder="address or @handle"
-              autoComplete="off"
-              spellCheck={false}
-              aria-label="What to list"
-              className="h-10 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
-            />
+            <div className="relative min-w-0 flex-1">
+              <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
+                <IdentityPreviewIcon
+                  preview={identityPreview}
+                  loading={identityPreviewLoading}
+                />
+              </span>
+              <input
+                value={identity}
+                onChange={(e) => setIdentity(e.target.value)}
+                placeholder="address or @handle"
+                autoComplete="off"
+                spellCheck={false}
+                aria-label="What to list"
+                className="h-10 w-full min-w-0 rounded-md border border-border bg-background pr-3 pl-9 text-sm outline-none placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+              />
+            </div>
 
-            <span className="hidden shrink-0 text-xs font-semibold text-muted-foreground tabular-nums md:inline">
-              lands #{rank}
-            </span>
+           
 
             <Button
               type="submit"

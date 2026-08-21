@@ -11,12 +11,14 @@ export function Pagination({
   rangeStart,
   rangeEnd,
   total,
+  rangeLabel,
 }: {
   page: number;
   pageCount: number;
   rangeStart: number;
   rangeEnd: number;
   total: number;
+  rangeLabel?: string;
 }) {
   return (
     <nav
@@ -24,9 +26,9 @@ export function Pagination({
       className="rule-t flex items-center justify-between gap-4 py-3 text-[11px] font-medium text-muted-foreground"
     >
       <p className="tabular-nums">
-        {total === 0
+        {rangeLabel ?? (total === 0
           ? "no entries"
-          : `${formatCount(rangeStart)}–${formatCount(rangeEnd)} of ${formatCount(total)}`}
+          : `${formatCount(rangeStart)}–${formatCount(rangeEnd)} of ${formatCount(total)}`)}
       </p>
 
       {pageCount > 1 ? (

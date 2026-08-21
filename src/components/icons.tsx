@@ -96,6 +96,14 @@ export function GlobeIcon({ className, ...props }: IconProps) {
   );
 }
 
+export function XIcon({ className, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className={cn("size-3.5", className)} {...props}>
+      <path d="M3 2.5h2.8l7.2 11H10.2l-7.2-11Zm9.6 0L3.4 13.5" stroke="currentColor" strokeWidth="1.35" />
+    </svg>
+  );
+}
+
 export function SunIcon({ className, ...props }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className={cn("size-3.5", className)} {...props}>

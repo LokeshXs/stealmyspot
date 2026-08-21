@@ -2,7 +2,7 @@ import "server-only";
 
 import { db } from "@/lib/db";
 import { ListingStatus } from "@/generated/prisma/enums";
-import { applyTakeover, sortBoard } from "@/lib/ranking";
+import { partitionTakeover, sortBoard, takeoverRankOf } from "@/lib/ranking";
 
 /** Current position of a listing on the live board, or null if it isn't published. */
 export async function rankOfListing(listingId: string): Promise<number | null> {
@@ -17,8 +17,11 @@ export async function rankOfListing(listingId: string): Promise<number | null> {
     }),
   ]);
 
-  const index = applyTakeover(sortBoard(listings), takeover).findIndex(
-    (l) => l.id === listingId,
-  );
+  const sorted = sortBoard(listings);
+  if (takeover) {
+    return takeoverRankOf(listingId, partitionTakeover(sorted, takeover));
+  }
+
+  const index = sorted.findIndex((listing) => listing.id === listingId);
   return index >= 0 ? index + 1 : null;
 }

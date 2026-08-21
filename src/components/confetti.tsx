@@ -1,52 +1,148 @@
-"use client";
+"use client"
 
-import { motion, useReducedMotion } from "motion/react";
+import type { ReactNode } from "react"
+import React, {
+  createContext,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react"
+import type {
+  GlobalOptions as ConfettiGlobalOptions,
+  CreateTypes as ConfettiInstance,
+  Options as ConfettiOptions,
+} from "canvas-confetti"
+import confetti from "canvas-confetti"
 
-/**
- * A one-shot burst for a won bid. Deliberately deterministic — no Math.random
- * at render time, so the server and client agree and nothing hydration-warns.
- */
-const PIECES = Array.from({ length: 28 }, (_, i) => {
-  const angle = (i / 28) * Math.PI * 2;
-  const spread = 120 + ((i * 37) % 90);
-  return {
-    id: i,
-    x: Math.cos(angle) * spread,
-    y: Math.sin(angle) * spread - 60,
-    rotate: ((i * 53) % 360) - 180,
-    delay: (i % 6) * 0.03,
-    wide: i % 3 === 0,
-  };
-});
+import { Button } from "@/components/ui/button"
 
-export function Confetti() {
-  const reduceMotion = useReducedMotion();
-  if (reduceMotion) return null;
+export type ConfettiRef = {
+  fire: (options?: ConfettiOptions) => Promise<void> | void
+}
+
+type Props = React.ComponentPropsWithRef<"canvas"> & {
+  options?: ConfettiOptions
+  globalOptions?: ConfettiGlobalOptions
+  manualstart?: boolean
+  children?: ReactNode
+}
+
+const ConfettiContext = createContext<ConfettiRef | null>(null)
+
+const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
+  const {
+    options,
+    globalOptions = { resize: true, useWorker: true },
+    manualstart = false,
+    children,
+    className,
+    ...rest
+  } = props
+
+  const canvasNodeRef = useRef<HTMLCanvasElement | null>(null)
+  const instanceRef = useRef<ConfettiInstance | null>(null)
+  const optionsRef = useRef(options)
+  const globalOptionsRef = useRef(globalOptions)
+
+  useEffect(() => {
+    optionsRef.current = options
+  }, [options])
+
+  useEffect(() => {
+    globalOptionsRef.current = globalOptions
+  }, [globalOptions])
+
+  useEffect(() => {
+    if (canvasNodeRef.current && !instanceRef.current) {
+      instanceRef.current = confetti.create(canvasNodeRef.current, {
+        resize: true,
+        useWorker: true,
+        ...globalOptionsRef.current,
+      })
+    }
+
+    return () => {
+      instanceRef.current?.reset()
+      instanceRef.current = null
+    }
+  }, [])
+
+  const fire = useCallback(async (opts: ConfettiOptions = {}) => {
+    try {
+      await instanceRef.current?.({
+        ...optionsRef.current,
+        ...opts,
+      })
+    } catch (error) {
+      console.error("Confetti error:", error)
+    }
+  }, [])
+
+  const api = useMemo<ConfettiRef>(() => ({ fire }), [fire])
+
+  useImperativeHandle(ref, () => api, [api])
+
+  useEffect(() => {
+    if (!manualstart) {
+      void fire()
+    }
+  }, [manualstart, fire])
 
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-16 flex justify-center">
-      <div className="relative size-0">
-        {PIECES.map((piece) => (
-          <motion.span
-            key={piece.id}
-            initial={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 0.6 }}
-            animate={{
-              opacity: [1, 1, 0],
-              x: piece.x,
-              y: [0, piece.y, piece.y + 260],
-              rotate: piece.rotate,
-              scale: 1,
-            }}
-            transition={{ duration: 1.9, delay: piece.delay, ease: [0.2, 0.7, 0.35, 1] }}
-            className={
-              piece.id % 2 === 0
-                ? "absolute block rounded-[1px] bg-primary"
-                : "absolute block rounded-[1px] bg-foreground"
-            }
-            style={{ width: piece.wide ? 9 : 5, height: piece.wide ? 5 : 9 }}
-          />
-        ))}
-      </div>
-    </div>
-  );
+    <ConfettiContext.Provider value={api}>
+      <canvas ref={canvasNodeRef} className={className} {...rest} />
+      {children}
+    </ConfettiContext.Provider>
+  )
+})
+
+ConfettiComponent.displayName = "Confetti"
+
+export const Confetti = ConfettiComponent
+
+export interface ConfettiButtonProps extends React.ComponentPropsWithoutRef<
+  typeof Button
+> {
+  options?: ConfettiOptions &
+    ConfettiGlobalOptions & { canvas?: HTMLCanvasElement }
 }
+
+export const ConfettiButton = forwardRef<
+  HTMLButtonElement,
+  ConfettiButtonProps
+>(({ options, children, onClick, ...props }, ref) => {
+  const handleClick: ConfettiButtonProps["onClick"] = async (event) => {
+    try {
+      onClick?.(event)
+      if (event?.defaultPrevented) return
+
+      const target = event?.currentTarget
+      if (target && "getBoundingClientRect" in target) {
+        const rect = target.getBoundingClientRect()
+        const origin = {
+          x: (rect.left + rect.width / 2) / window.innerWidth,
+          y: (rect.top + rect.height / 2) / window.innerHeight,
+        }
+
+        await confetti({
+          zIndex: 9999,
+          ...options,
+          origin,
+        })
+      }
+    } catch (error) {
+      console.error("Confetti button error:", error)
+    }
+  }
+
+  return (
+    <Button ref={ref} type="button" onClick={handleClick} {...props}>
+      {children}
+    </Button>
+  )
+})
+
+ConfettiButton.displayName = "ConfettiButton"

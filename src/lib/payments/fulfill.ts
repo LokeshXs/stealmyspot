@@ -3,7 +3,7 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { BidKind, ListingStatus, PaymentStatus } from "@/generated/prisma/enums";
-import { PAGE_SIZE, sortBoard, takeoverEndsAt } from "@/lib/ranking";
+import { PAGE_SIZE, partitionTakeover, sortBoard, takeoverEndsAt, takeoverRankOf } from "@/lib/ranking";
 
 export type FulfillOutcome =
   | { status: "fulfilled"; listingId: string; amountCents: number }
@@ -52,7 +52,7 @@ export async function fulfillBid(
 
     if (bid.kind === BidKind.TAKEOVER) {
       // Snapshot page 1 as it stands *after* this bid lands, minus the winner —
-      // that frozen order is what fills the rest of the first page for 3 hours.
+      // that frozen order is what fills the rest of the first page for 1 hour.
       const published = await tx.listing.findMany({
         where: { status: ListingStatus.PUBLISHED },
         select: { id: true, amountCents: true, rankedAt: true },
@@ -73,6 +73,50 @@ export async function fulfillBid(
         },
       });
     }
+
+    // Capture the position earned by this payment before the transaction
+    // completes. Later bids may move the listing, but its share card must not.
+    const [published, activeTakeover] = await Promise.all([
+      tx.listing.findMany({
+        where: { status: ListingStatus.PUBLISHED },
+        select: { id: true, amountCents: true, rankedAt: true },
+      }),
+      tx.takeover.findFirst({
+        where: { endsAt: { gt: now } },
+        orderBy: { startsAt: "desc" },
+      }),
+    ]);
+    const sorted = sortBoard(published);
+    let effectiveTakeover = activeTakeover;
+    let partition = effectiveTakeover ? partitionTakeover(sorted, effectiveTakeover) : null;
+    const admittedToOpenSlot = Boolean(
+      effectiveTakeover &&
+        partition?.frozen.some((listing) => listing.id === bid.listingId) &&
+        effectiveTakeover.listingId !== bid.listingId &&
+        !effectiveTakeover.frozenIds.includes(bid.listingId),
+    );
+    if (effectiveTakeover && admittedToOpenSlot) {
+      effectiveTakeover = await tx.takeover.update({
+        where: { id: effectiveTakeover.id },
+        data: { frozenIds: [...effectiveTakeover.frozenIds, bid.listingId] },
+      });
+      partition = partitionTakeover(sorted, effectiveTakeover);
+    }
+    const waitingForRanking = Boolean(
+      effectiveTakeover &&
+        partition &&
+        partition.queued.some((listing) => listing.id === bid.listingId),
+    );
+    const achievedRank = waitingForRanking
+      ? null
+      : effectiveTakeover && partition
+        ? takeoverRankOf(bid.listingId, partition)
+        : sorted.findIndex((listing) => listing.id === bid.listingId) + 1;
+
+    await tx.bid.update({
+      where: { id: bid.id },
+      data: { achievedRank: achievedRank && achievedRank > 0 ? achievedRank : null },
+    });
 
     return {
       status: "fulfilled",

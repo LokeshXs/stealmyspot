@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  * Fire-and-forget click tracking. The anchor keeps its real href so the status
  * bar shows the true destination and navigation is never delayed by us.
  */
-function trackClick(id: string) {
+export function trackListingClick(id: string) {
   const body = JSON.stringify({ id });
   if (typeof navigator !== "undefined" && navigator.sendBeacon) {
     navigator.sendBeacon("/api/click", new Blob([body], { type: "application/json" }));
@@ -47,7 +47,7 @@ export function ListingRow({ entry }: { entry: BoardEntry }) {
   }
 
   return (
-    <article className={cn("group relative", isLeader && "bg-primary/[0.05]")}>
+    <article className={cn("group relative", isLeader && "bg-primary/[0.05]", entry.takeoverState === "FROZEN" && "bg-primary/[0.025]", entry.takeoverState === "QUEUED" && "bg-muted/20")}>
       {/* The leader is marked in the margin rather than by boxing the row. */}
       {isLeader ? (
         <span aria-hidden="true" className="absolute inset-y-0 left-0 z-20 w-1 bg-[--accent-bar]" />
@@ -64,8 +64,8 @@ export function ListingRow({ entry }: { entry: BoardEntry }) {
           href={entry.sourceUrl}
           target="_blank"
           rel="sponsored noopener noreferrer"
-          onClick={() => trackClick(entry.id)}
-          onAuxClick={() => trackClick(entry.id)}
+          onClick={() => trackListingClick(entry.id)}
+          onAuxClick={() => trackListingClick(entry.id)}
           aria-label={`${entry.label} — rank ${entry.rank}, ${formatDollars(entry.amountCents)}`}
           className="absolute inset-0 z-10 rounded-sm focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none"
         />
@@ -93,6 +93,9 @@ export function ListingRow({ entry }: { entry: BoardEntry }) {
               <span className="shrink-0 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-black tracking-[0.1em] text-primary-foreground uppercase">
                 Leader
               </span>
+            ) : null}
+            {entry.takeoverState === "FROZEN" || entry.takeoverState === "QUEUED" ? (
+              <span className="shrink-0 border border-foreground px-1.5 py-0.5 text-[9px] font-black tracking-[0.1em] uppercase">{entry.takeoverState}</span>
             ) : null}
           </div>
 
@@ -126,7 +129,7 @@ export function ListingRow({ entry }: { entry: BoardEntry }) {
               onClick={takeThisPlace}
               className="shadow-hard-sm relative z-20 cursor-pointer rounded-md border border-foreground bg-card px-2 py-0.5 text-[10px] font-bold whitespace-nowrap opacity-0 transition-all hover:-translate-x-px hover:-translate-y-px focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none active:translate-x-[2px] active:translate-y-[2px] active:shadow-none group-hover:opacity-100 group-focus-within:opacity-100 max-sm:hidden"
             >
-              take this place · {nextPrice}
+              {entry.takeoverState === "QUEUED" ? "raise waiting bid" : entry.takeoverState === "FROZEN" ? "raise frozen bid" : "take this place"} · {nextPrice}
             </button>
           )}
         </div>

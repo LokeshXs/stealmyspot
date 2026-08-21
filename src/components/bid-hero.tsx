@@ -1,7 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, GlobeIcon } from "@/components/icons";
+import { ArrowRight } from "@/components/icons";
+import { IdentityPreviewIcon } from "@/components/identity-preview-icon";
 import { RollingNumber } from "@/components/rolling-number";
 import { useBidForm, digitsOnly } from "@/components/bid-form-context";
 import { useBoard } from "@/components/board-context";
@@ -28,9 +29,12 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
     error,
     submit,
     identityRef,
+    identityPreview,
+    identityPreviewLoading,
   } = useBidForm();
   const reduceMotion = useReducedMotion();
 
+  const takeoverActive = Boolean(board.takeover);
   const takesTop = rank === 1;
   const dollars = Number.parseInt(digitsOnly(amount) || "0", 10);
   const overMax = dollars * 100 > MAX_BID_CENTS;
@@ -59,7 +63,7 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
         </p>
 
         <h1 className="mt-3 text-4xl leading-[1.05] font-black tracking-[-0.04em] text-balance sm:text-6xl">
-          Promote your website. {" "}
+          Promote your product. {" "}
           <span className="marker-stroke">
             Claim spot{" "}
             <motion.span
@@ -133,7 +137,9 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
         <p className={cn("mt-3 text-sm", overMax ? "font-medium text-destructive" : "text-muted-foreground")}>
           {overMax
             ? `That is over the ${formatDollars(MAX_BID_CENTS)} limit for a single bid.`
-            : takesTop
+            : takeoverActive
+              ? `Currently projected #${rank} when page one reopens. Projection updates as bids arrive.`
+              : takesTop
               ? "Takes first place outright."
               : "Any amount takes the highest place it can afford."}
         </p>
@@ -150,7 +156,11 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
         >
           <div className="relative min-w-0 flex-1">
             <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground">
-              <GlobeIcon className="size-4" />
+              <IdentityPreviewIcon
+                preview={identityPreview}
+                loading={identityPreviewLoading}
+                className="size-4"
+              />
             </span>
             <input
               ref={identityRef}
@@ -186,7 +196,7 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
               aria-live="polite"
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold tabular-nums transition-colors",
-                takesTop && !overMax ? "bg-primary/15 text-primary" : "text-muted-foreground",
+                (takesTop || takeoverActive) && !overMax ? "bg-primary/15 text-primary" : "text-muted-foreground",
               )}
             >
               {overMax ? (
@@ -194,7 +204,7 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
               ) : (
                 <>
                   <ArrowRight className="size-3.5" />
-                  lands at #{rank}
+                  {takeoverActive ? `projected #${rank} after the hold` : `lands at #${rank}`}
                 </>
               )}
             </p>

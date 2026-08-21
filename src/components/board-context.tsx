@@ -65,6 +65,15 @@ export function BoardProvider({
     return () => clearInterval(timer);
   }, [load, board.page]);
 
+  // One owner for expiry refresh avoids the sidebar and ledger countdowns both
+  // issuing the same request when they reach zero.
+  useEffect(() => {
+    if (!board.takeoverEndsAt) return;
+    const delay = Math.max(0, new Date(board.takeoverEndsAt).getTime() - Date.now() + 50);
+    const timer = window.setTimeout(() => void load(board.page), delay);
+    return () => window.clearTimeout(timer);
+  }, [board.takeoverEndsAt, board.page, load]);
+
   // Drives the "updated Ns ago" readout in the dateline.
   useEffect(() => {
     const tick = setInterval(() => {

@@ -23,7 +23,7 @@ export const MIN_BID_CENTS = 100;
 export const MAX_BID_CENTS = 100_000_000;
 export const INCREMENT_CENTS = 100;
 export const PAGE_SIZE = 50;
-export const TAKEOVER_HOURS = 3;
+export const TAKEOVER_HOURS = 1;
 export const TAKEOVER_MULTIPLIER = 2;
 
 /** The minimum shape ranking cares about. Real Listings satisfy this structurally. */
@@ -37,6 +37,11 @@ export interface ActiveTakeover {
   listingId: string;
   endsAt: Date;
   frozenIds: string[];
+}
+
+export interface TakeoverPartition<T> {
+  frozen: T[];
+  queued: T[];
 }
 
 /**
@@ -200,6 +205,50 @@ export function applyTakeover<T extends RankableListing>(
 
   const rest = sorted.filter((l) => !seen.has(l.id));
   return [...pinned, ...rest];
+}
+
+/** Fills open page-one slots, then separates overflow bids from the frozen page. */
+export function partitionTakeover<T extends RankableListing>(
+  sorted: readonly T[],
+  takeover: ActiveTakeover,
+): TakeoverPartition<T> {
+  const byId = new Map(sorted.map((listing) => [listing.id, listing]));
+  const frozen: T[] = [];
+  const seen = new Set<string>();
+  const holder = byId.get(takeover.listingId);
+
+  if (holder) {
+    frozen.push(holder);
+    seen.add(holder.id);
+  }
+  for (const id of takeover.frozenIds) {
+    if (seen.has(id) || frozen.length >= PAGE_SIZE) continue;
+    const listing = byId.get(id);
+    if (!listing) continue;
+    frozen.push(listing);
+    seen.add(id);
+  }
+
+  // A takeover freezes occupied positions, not empty air. New paid listings
+  // fill the remaining page-one slots in normal bid order and freeze there.
+  for (const listing of sorted) {
+    if (frozen.length >= PAGE_SIZE) break;
+    if (seen.has(listing.id)) continue;
+    frozen.push(listing);
+    seen.add(listing.id);
+  }
+
+  return { frozen, queued: sorted.filter((listing) => !seen.has(listing.id)) };
+}
+
+export function takeoverRankOf(
+  listingId: string,
+  partition: TakeoverPartition<RankableListing>,
+): number | null {
+  const frozenIndex = partition.frozen.findIndex((listing) => listing.id === listingId);
+  if (frozenIndex >= 0) return frozenIndex + 1;
+  const queuedIndex = partition.queued.findIndex((listing) => listing.id === listingId);
+  return queuedIndex >= 0 ? PAGE_SIZE + queuedIndex + 1 : null;
 }
 
 export function totalPages(count: number): number {

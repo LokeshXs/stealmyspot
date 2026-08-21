@@ -7,6 +7,16 @@
 
 import { IdentityType } from "@/generated/prisma/enums";
 
+export const X_LISTING_IMAGE = "/x.jpg";
+
+/** X profile images are not scraped, so all X identities use the branded asset. */
+export function imageForIdentity(
+  identityType: "WEBSITE" | "X",
+  imageUrl: string | null,
+): string | null {
+  return identityType === IdentityType.X ? X_LISTING_IMAGE : imageUrl;
+}
+
 /** Hosts whose *path* is part of the identity — different apps must not share a bid. */
 const PATH_KEYED_HOSTS = new Set([
   "apps.apple.com",

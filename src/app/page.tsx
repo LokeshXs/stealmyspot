@@ -31,8 +31,8 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <PresenceBaselineProvider initialBaseline={presenceBaseline}>
         {/* StickyBidBar is fixed to the viewport, so the footer needs extra clearance. */}
         <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pt-6 pb-24 sm:px-6">
-          <SiteHeader />
           <BoardProvider initialBoard={board}>
+            <SiteHeader />
             <BoardShell volumeCents={stats.volumeCents} />
           </BoardProvider>
           <SeoContent />

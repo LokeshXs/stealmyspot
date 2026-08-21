@@ -73,8 +73,9 @@ export default function RulesPage() {
         </Clause>
         <Clause>
           Reserving the front page costs <Num>{TAKEOVER_MULTIPLIER}×</Num> whatever stands at the
-          top and freezes page one for <Num>{TAKEOVER_HOURS}</Num> hours. One reservation runs at a
-          time, and later entries wait on page two until it lapses.
+          top and pins its holder at #1 for <Num>{TAKEOVER_HOURS}</Num> hour. Occupied page-one
+          positions freeze in place, while new paid listings fill any open slots up to 50. Only
+          overflow waits for the hold to end. One reservation runs at a time.
         </Clause>
       </Section>
 

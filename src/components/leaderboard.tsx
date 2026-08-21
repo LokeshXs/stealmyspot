@@ -2,15 +2,24 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ListingRow } from "@/components/listing-row";
+import { TakeoverDeed } from "@/components/takeover-deed";
 import { Pagination } from "@/components/pagination";
 import { useBoard } from "@/components/board-context";
 import { formatDollars } from "@/lib/format";
-import { MIN_BID_CENTS, TAKEOVER_HOURS } from "@/lib/ranking";
+import { MIN_BID_CENTS } from "@/lib/ranking";
 
 /** The ledger: hairline-divided rows on the page, no card, no shadow. */
 export function Leaderboard() {
   const { board } = useBoard();
   const reduceMotion = useReducedMotion();
+  const holder = board.page === 1 ? board.entries.find((entry) => entry.takeoverState === "HOLDER") : null;
+  const ordinaryEntries = holder ? board.entries.filter((entry) => entry.id !== holder.id) : board.entries;
+  const queuedStart = (board.page - 2) * 50 + 1;
+  const paginationLabel = board.takeover
+    ? board.page === 1
+      ? `${board.takeover.occupiedCount} occupied · ${50 - board.takeover.occupiedCount} open`
+      : `${queuedStart}–${queuedStart + board.entries.length - 1} of ${board.takeover.queuedCount} queued`
+    : undefined;
 
   return (
     <div>
@@ -19,25 +28,20 @@ export function Leaderboard() {
           The ledger
         </h2>
         {board.total > 0 ? (
-          <p className="text-[11px] font-medium text-muted-foreground tabular-nums">
-            {board.rangeStart}–{board.rangeEnd} of {board.total}
-          </p>
+          <p className="text-[11px] font-medium text-muted-foreground tabular-nums">{board.takeover ? (board.page === 1 ? `${board.takeover.occupiedCount} occupied · ${50 - board.takeover.occupiedCount} open` : `${board.takeover.queuedCount} waiting ${board.takeover.queuedCount === 1 ? "entry" : "entries"}`) : `${board.rangeStart}–${board.rangeEnd} of ${board.total}`}</p>
         ) : null}
       </div>
 
-      {board.takeoverEndsAt ? (
-        <p className="mb-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-pretty sm:px-4">
-          <span className="font-bold text-primary">Page one is held.</span> Reserved for{" "}
-          {TAKEOVER_HOURS} hours — new entries join from page two until it lapses.
-        </p>
-      ) : null}
+      {holder && board.takeover ? <TakeoverDeed entry={holder} takeover={board.takeover} /> : null}
+      {holder && ordinaryEntries.length > 0 ? <div className="mt-5 flex items-center justify-between border-b-2 border-foreground pb-2"><p className="text-[0.65rem] font-black tracking-[0.17em] uppercase">Frozen positions</p><span className="text-[0.6rem] font-bold tracking-[0.12em] text-muted-foreground uppercase">Locked until expiry</span></div> : null}
+      {board.takeover && board.page > 1 ? <div className="mb-3 border-2 border-foreground bg-primary/10 px-4 py-3"><p className="text-xs font-black tracking-[0.15em] uppercase">Awaiting page-one reopening</p><p className="mt-1 text-xs text-muted-foreground">These products will be ranked normally when the reservation ends.</p></div> : null}
 
       {board.entries.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="divide-y divide-[--rule] border-y border-[--rule]">
+        <div className={holder ? "divide-y divide-[--rule] border-b border-[--rule]" : "divide-y divide-[--rule] border-y border-[--rule]"}>
           <AnimatePresence initial={false}>
-            {board.entries.map((entry) => (
+            {ordinaryEntries.map((entry) => (
               <motion.div
                 key={entry.id}
                 layout={reduceMotion ? false : "position"}
@@ -59,6 +63,7 @@ export function Leaderboard() {
         rangeStart={board.rangeStart}
         rangeEnd={board.rangeEnd}
         total={board.total}
+        rangeLabel={paginationLabel}
       />
     </div>
   );

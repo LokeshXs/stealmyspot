@@ -75,6 +75,9 @@ model Bid {
   /// Dodo payment_id, arrives with the webhook
   paymentId     String?       @unique
   customerEmail String?
+  /// Position reached when this payment settled. Kept for honest share cards
+  /// even after later bids move the listing.
+  achievedRank  Int?
   createdAt     DateTime      @default(now())
   paidAt        DateTime?
 
@@ -92,7 +95,7 @@ model WebhookEvent {
   processedAt DateTime?
 }
 
-/// A paid takeover pins its listing at #1 and freezes page 1 for 3 hours.
+/// A paid takeover pins its listing at #1 and freezes page 1 for 1 hour.
 model Takeover {
   id          String   @id @default(uuid())
   listingId   String
