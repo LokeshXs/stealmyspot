@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { UMAMI_SHARE_URL } from "@/lib/analytics";
 import { usePresenceBaseline } from "@/components/presence-baseline-context";
 import { addPresenceBaseline } from "@/lib/display-presence";
 import { formatCount } from "@/lib/format";
 
 /**
  * Readership badge for the masthead: a pill carrying the live count, the past
- * hour, and a way through to the figures. Server-renders with real numbers,
- * then polls so the count actually moves.
+ * hour, and a way through to the public Umami dashboard. Server-renders with
+ * real numbers, then polls so the count actually moves.
  *
  * The two trailing segments are hidden below `sm` — on a phone the pill has to
  * share a line with the wordmark, so only the live count earns its place.
@@ -47,8 +47,10 @@ export function LivePill({
   }, []);
 
   return (
-    <Link
-      href="/stats"
+    <a
+      href={UMAMI_SHARE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
       className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
     >
       <span className="relative inline-flex size-2 shrink-0">
@@ -65,6 +67,6 @@ export function LivePill({
       </span>
 
       <span className="hidden text-foreground sm:inline">· see stats→</span>
-    </Link>
+    </a>
   );
 }

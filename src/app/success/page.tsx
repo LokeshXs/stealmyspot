@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SuccessStatus } from "@/components/success-status";
@@ -7,6 +8,14 @@ import { PaymentStatus } from "@/generated/prisma/enums";
 import { rankOfListing } from "@/lib/rank-lookup";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Bid Status | Steal My Spot",
+  alternates: { canonical: null },
+  openGraph: null,
+  twitter: null,
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
 
 /**
  * Dodo's return_url lands here. The redirect can beat the webhook, so this page

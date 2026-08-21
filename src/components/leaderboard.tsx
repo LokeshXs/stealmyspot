@@ -9,7 +9,7 @@ import { MIN_BID_CENTS, TAKEOVER_HOURS } from "@/lib/ranking";
 
 /** The ledger: hairline-divided rows on the page, no card, no shadow. */
 export function Leaderboard() {
-  const { board, refresh } = useBoard();
+  const { board } = useBoard();
   const reduceMotion = useReducedMotion();
 
   return (
@@ -59,7 +59,6 @@ export function Leaderboard() {
         rangeStart={board.rangeStart}
         rangeEnd={board.rangeEnd}
         total={board.total}
-        onPageChange={refresh}
       />
     </div>
   );

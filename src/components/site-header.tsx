@@ -12,9 +12,7 @@ export async function SiteHeader() {
 
   return (
     <header className="rule-masthead flex flex-wrap items-center justify-between gap-x-4 gap-y-3 pb-3">
-      <h1>
-        <Wordmark />
-      </h1>
+      <Wordmark />
 
       <div className="flex min-w-0 items-center gap-3">
         <LivePill initialOnline={online} initialLastHour={lastHour} />

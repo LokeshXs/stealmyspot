@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MockCheckoutForm } from "@/components/mock-checkout-form";
@@ -11,6 +12,14 @@ import { formatDollars } from "@/lib/format";
 import { previewRank } from "@/lib/ranking";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Checkout | Steal My Spot",
+  alternates: { canonical: null },
+  openGraph: null,
+  twitter: null,
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
 
 /** Stand-in for a hosted checkout. Only exists while PAYMENT_PROVIDER=mock. */
 export default async function MockCheckoutPage({ params }: PageProps<"/checkout/[bidId]">) {

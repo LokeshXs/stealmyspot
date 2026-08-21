@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Inter_Tight } from "next/font/google";
-import { connection } from "next/server";
-import { PresenceBaselineProvider } from "@/components/presence-baseline-context";
+import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
-import { PresenceTracker } from "@/components/presence-tracker";
-import { createPresenceBaseline } from "@/lib/display-presence";
-import { appUrl, branding, siteTitle } from "@/lib/env";
+import { canonicalOrigin } from "@/lib/env";
+import { HOME_DESCRIPTION, HOME_TITLE, pageMetadata } from "@/lib/seo";
 import "./globals.css";
 
 // One family for everything. Inter Tight carries 400 through 900, and its
@@ -16,29 +14,19 @@ const interTight = Inter_Tight({
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
-const description = `${branding.tagline} ${branding.taglineEmphasis}`;
-
 export const metadata: Metadata = {
-  metadataBase: new URL(appUrl),
-  title: siteTitle,
-  description,
-  openGraph: {
-    title: siteTitle,
-    description,
-    type: "website",
-    url: appUrl,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: siteTitle,
-    description,
-  },
+  metadataBase: new URL(canonicalOrigin),
+  ...pageMetadata({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" }),
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  await connection();
-  const presenceBaseline = createPresenceBaseline();
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbfbfd" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0e13" },
+  ],
+};
 
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
@@ -46,12 +34,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${interTight.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <PresenceBaselineProvider initialBaseline={presenceBaseline}>
-          <ThemeProvider>
-            {children}
-            <PresenceTracker />
-          </ThemeProvider>
-        </PresenceBaselineProvider>
+        <ThemeProvider>{children}</ThemeProvider>
+        <Script
+          src="https://cloud.umami.is/script.js"
+          strategy="afterInteractive"
+          data-website-id="3715c31e-24ad-4bff-a252-44cf55f87453"
+        />
       </body>
     </html>
   );

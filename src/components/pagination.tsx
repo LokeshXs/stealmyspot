@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "@/components/icons";
 import { formatCount } from "@/lib/format";
 
@@ -10,14 +11,12 @@ export function Pagination({
   rangeStart,
   rangeEnd,
   total,
-  onPageChange,
 }: {
   page: number;
   pageCount: number;
   rangeStart: number;
   rangeEnd: number;
   total: number;
-  onPageChange: (page: number) => void;
 }) {
   return (
     <nav
@@ -32,27 +31,29 @@ export function Pagination({
 
       {pageCount > 1 ? (
         <div className="flex items-center gap-3">
-          <button
-            type="button"
+          <Link
+            href={`/?page=${page - 1}`}
+            scroll={false}
             aria-label="Previous page"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-            className="cursor-pointer p-1 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
+            aria-disabled={page <= 1}
+            tabIndex={page <= 1 ? -1 : undefined}
+            className="p-1 transition-colors hover:text-foreground aria-disabled:pointer-events-none aria-disabled:opacity-30"
           >
             <ChevronLeft />
-          </button>
+          </Link>
           <span className="tabular-nums">
             Page {page} of {pageCount}
           </span>
-          <button
-            type="button"
+          <Link
+            href={`/?page=${page + 1}`}
+            scroll={false}
             aria-label="Next page"
-            disabled={page >= pageCount}
-            onClick={() => onPageChange(page + 1)}
-            className="cursor-pointer p-1 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
+            aria-disabled={page >= pageCount}
+            tabIndex={page >= pageCount ? -1 : undefined}
+            className="p-1 transition-colors hover:text-foreground aria-disabled:pointer-events-none aria-disabled:opacity-30"
           >
             <ChevronRight />
-          </button>
+          </Link>
         </div>
       ) : null}
     </nav>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UMAMI_SHARE_URL } from "@/lib/analytics";
 import { splitBrandName } from "@/lib/env";
 
 /**
@@ -19,9 +20,14 @@ export function SiteFooter() {
         <Link href="/rules" className="font-medium transition-colors hover:text-foreground">
           Rules
         </Link>
-        <Link href="/stats" className="font-medium transition-colors hover:text-foreground">
+        <a
+          href={UMAMI_SHARE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium transition-colors hover:text-foreground"
+        >
           See Stats
-        </Link>
+        </a>
       </nav>
 
       <span className="text-[11px]">

@@ -93,7 +93,6 @@ export async function fulfillBid(
      */
     try {
       revalidatePath("/");
-      revalidatePath("/stats");
     } catch (error) {
       console.warn(
         "[fulfillBid] revalidate skipped (no request context):",

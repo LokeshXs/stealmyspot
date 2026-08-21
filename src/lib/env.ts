@@ -13,8 +13,18 @@ export type PaymentProviderName = "mock" | "dodo";
 export const paymentProvider: PaymentProviderName =
   process.env.PAYMENT_PROVIDER === "dodo" ? "dodo" : "mock";
 
-export const appUrl =
+const configuredAppUrl =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+
+// Production already redirects the apex host to www. Normalize an older apex
+// environment value so every absolute URL emits the same canonical hostname.
+export const appUrl = configuredAppUrl.replace(
+  /^https:\/\/stealmyspot\.lol$/,
+  "https://www.stealmyspot.lol",
+);
+
+/** Search metadata must never change with a preview or local deployment URL. */
+export const canonicalOrigin = "https://www.stealmyspot.lol";
 
 const siteName = process.env.NEXT_PUBLIC_SITE_NAME ?? "Steal My Spot";
 

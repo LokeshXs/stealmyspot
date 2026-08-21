@@ -58,10 +58,10 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
             : `${board.total} ${board.total === 1 ? "entry" : "entries"} · top ${formatDollars(board.topBidCents)}`}
         </p>
 
-        <h2 className="mt-3 text-4xl leading-[1.05] font-black tracking-[-0.04em] text-balance sm:text-6xl">
-          Claim{" "}
+        <h1 className="mt-3 text-4xl leading-[1.05] font-black tracking-[-0.04em] text-balance sm:text-6xl">
+          Promote your website. {" "}
           <span className="marker-stroke">
-            position{" "}
+            Claim spot{" "}
             <motion.span
               key={rank}
               initial={reduceMotion ? false : { scale: 0.72, opacity: 0 }}
@@ -72,7 +72,7 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
               #{rank}
             </motion.span>
           </span>
-        </h2>
+        </h1>
 
         {/* The number itself. Everything above is setup; this is the product. */}
         <div className="mt-8 flex w-full items-center justify-center gap-3 sm:gap-5">

@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
 import { Wordmark } from "@/components/wordmark";
-import { siteTitle } from "@/lib/env";
+import { pageMetadata, RULES_DESCRIPTION, RULES_TITLE } from "@/lib/seo";
 import { MIN_BID_CENTS, TAKEOVER_HOURS, TAKEOVER_MULTIPLIER } from "@/lib/ranking";
 
-export const metadata: Metadata = { title: `Rules · ${siteTitle}` };
+export const metadata: Metadata = pageMetadata({
+  title: RULES_TITLE,
+  description: RULES_DESCRIPTION,
+  path: "/rules",
+});
 
 const minimum = MIN_BID_CENTS / 100;
 
