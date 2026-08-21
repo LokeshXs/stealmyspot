@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Confetti } from "@/components/confetti";
 import { Spinner } from "@/components/icons";
 import { formatDollars } from "@/lib/format";
@@ -9,6 +10,7 @@ type Status = "PENDING" | "PAID" | "FAILED" | "EXPIRED";
 
 const POLL_MS = 2_000;
 const GIVE_UP_AFTER_MS = 60_000;
+const REDIRECT_AFTER_SECONDS = 5;
 
 export function SuccessStatus({
   bidId,
@@ -21,9 +23,11 @@ export function SuccessStatus({
   initialRank: number | null;
   amountCents: number;
 }) {
+  const router = useRouter();
   const [status, setStatus] = useState<Status>(initialStatus);
   const [rank, setRank] = useState<number | null>(initialRank);
   const [timedOut, setTimedOut] = useState(false);
+  const [redirectIn, setRedirectIn] = useState(REDIRECT_AFTER_SECONDS);
 
   useEffect(() => {
     if (status !== "PENDING") return;
@@ -55,6 +59,22 @@ export function SuccessStatus({
     };
   }, [bidId, status]);
 
+  useEffect(() => {
+    if (status !== "PAID") return;
+
+    const interval = window.setInterval(() => {
+      setRedirectIn((seconds) => Math.max(0, seconds - 1));
+    }, 1_000);
+    const timeout = window.setTimeout(() => {
+      router.replace("/");
+    }, REDIRECT_AFTER_SECONDS * 1_000);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [router, status]);
+
   if (status === "PAID") {
     return (
       <div className="relative">
@@ -70,6 +90,9 @@ export function SuccessStatus({
           <span className="font-semibold text-foreground">{formatDollars(amountCents)}</span>. The next
           person along pays {formatDollars(amountCents + 100)} to pass you — and you only pay the
           gap to take it back.
+        </p>
+        <p className="mt-4 text-xs text-muted-foreground" aria-live="polite">
+          Returning to the ledger in {redirectIn}s.
         </p>
       </div>
     );

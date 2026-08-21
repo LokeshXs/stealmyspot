@@ -6,7 +6,8 @@ import net from "node:net";
 import { appUrl, branding } from "@/lib/env";
 
 /**
- * Fetches a submitted URL and pulls out the Open Graph card we show on the board.
+ * Fetches a submitted URL and pulls out the title, description and site logo we
+ * show on the board.
  *
  * This is the one place the server follows a user-supplied URL, so it is also the
  * one place that needs an SSRF guard: every hop is re-resolved and checked against
@@ -187,13 +188,26 @@ function metaContent(html: string, names: string[]): string | null {
   return null;
 }
 
-function extractImage(html: string, baseUrl: string): string | null {
-  const candidate =
-    metaContent(html, ["og:image", "og:image:url", "twitter:image", "twitter:image:src"]) ??
-    html.match(/<link[^>]+rel\s*=\s*["'][^"']*apple-touch-icon[^"']*["'][^>]*href\s*=\s*["']([^"']+)["']/i)?.[1] ??
-    html.match(/<link[^>]+rel\s*=\s*["'][^"']*icon[^"']*["'][^>]*href\s*=\s*["']([^"']+)["']/i)?.[1];
+/** Finds a linked icon regardless of whether `rel` or `href` comes first. */
+function linkedIcon(html: string): string | null {
+  const links = html.match(/<link\b[^>]*>/gi) ?? [];
+  let favicon: string | null = null;
 
-  if (!candidate) return null;
+  for (const link of links) {
+    const rel = link.match(/\brel\s*=\s*["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    const href = link.match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1];
+    if (!rel || !href) continue;
+
+    const relTokens = new Set(rel.split(/\s+/));
+    if (relTokens.has("apple-touch-icon")) return href;
+    if (!favicon && relTokens.has("icon")) favicon = href;
+  }
+
+  return favicon;
+}
+
+function extractLogo(html: string, baseUrl: string): string | null {
+  const candidate = linkedIcon(html) ?? "/favicon.ico";
   try {
     const resolved = new URL(decodeEntities(candidate), baseUrl);
     if (resolved.protocol !== "http:" && resolved.protocol !== "https:") return null;
@@ -229,7 +243,7 @@ export async function scrapeMetadata(url: string): Promise<ScrapedMetadata> {
         metaContent(html, ["og:description", "twitter:description", "description"]),
         280,
       ),
-      imageUrl: extractImage(html, finalUrl),
+      imageUrl: extractLogo(html, finalUrl),
     };
   } catch {
     return empty;

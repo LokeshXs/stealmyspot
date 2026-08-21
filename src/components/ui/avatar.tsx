@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Square hairline tile. Falls back to a letter when the scraped og:image is
+ * Square hairline tile. Falls back to a letter when the scraped site logo is
  * missing or 404s — a fair share of them do.
  */
 export function Avatar({

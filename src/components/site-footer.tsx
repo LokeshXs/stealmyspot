@@ -24,6 +24,18 @@ export function SiteFooter() {
         </Link>
       </nav>
 
+      <span className="text-[11px]">
+        Built by{" "}
+        <a
+          href="https://x.com/ShipItLokesh"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-foreground transition-colors hover:text-primary focus-visible:text-primary focus-visible:outline-none"
+        >
+          ShipItLokesh
+        </a>
+      </span>
+
       <span className="ml-auto text-[11px]">Positions are bought, not earned.</span>
     </footer>
   );

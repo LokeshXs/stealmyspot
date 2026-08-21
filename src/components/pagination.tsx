@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "@/components/icons";
+import { formatCount } from "@/lib/format";
 
 /** Bottom-of-page navigation: a range readout on the left, arrows on the right. */
 export function Pagination({
@@ -18,15 +19,15 @@ export function Pagination({
   total: number;
   onPageChange: (page: number) => void;
 }) {
-  const pad = (n: number) => String(n).padStart(3, "0");
-
   return (
     <nav
       aria-label="Ledger pages"
       className="rule-t flex items-center justify-between gap-4 py-3 text-[11px] font-medium text-muted-foreground"
     >
       <p className="tabular-nums">
-        {total === 0 ? "no entries" : `${pad(rangeStart)}–${pad(rangeEnd)} of ${pad(total)}`}
+        {total === 0
+          ? "no entries"
+          : `${formatCount(rangeStart)}–${formatCount(rangeEnd)} of ${formatCount(total)}`}
       </p>
 
       {pageCount > 1 ? (

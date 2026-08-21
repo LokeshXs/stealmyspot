@@ -1,11 +1,12 @@
 "use client";
 
 import { RollingNumber } from "@/components/rolling-number";
+import { useBidForm } from "@/components/bid-form-context";
 import { Avatar } from "@/components/ui/avatar";
 import type { BoardEntry } from "@/lib/board";
 import { formatCount, formatDollars, timeAgo } from "@/lib/format";
 import { initialFor } from "@/lib/identity";
-import { INCREMENT_CENTS } from "@/lib/ranking";
+import { INCREMENT_CENTS, MAX_BID_CENTS } from "@/lib/ranking";
 import { cn } from "@/lib/utils";
 
 /**
@@ -25,25 +26,50 @@ function trackClick(id: string) {
 const PODIUM = ["bg-rank-1 text-primary", "bg-rank-2 text-primary", "bg-rank-3 text-primary"];
 
 export function ListingRow({ entry }: { entry: BoardEntry }) {
+  const { setAmount, identityRef } = useBidForm();
+
   const isLeader = entry.rank === 1;
   const podium = PODIUM[entry.rank - 1];
-  const nextPrice = formatDollars(entry.amountCents + INCREMENT_CENTS);
+  const nextCents = entry.amountCents + INCREMENT_CENTS;
+  const nextPrice = formatDollars(nextCents);
+  const outOfReach = nextCents > MAX_BID_CENTS;
+
+  /**
+   * Loads the composer with the price it takes to pass this row — and nothing
+   * else. Deliberately does NOT touch the address field: that field holds *your*
+   * listing, so prefilling this row's address would raise their entry and have
+   * you pay to promote a competitor.
+   */
+  function takeThisPlace() {
+    setAmount(String(Math.round(nextCents / 100)));
+    identityRef.current?.focus();
+    identityRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
 
   return (
     <article className={cn("group relative", isLeader && "bg-primary/[0.05]")}>
       {/* The leader is marked in the margin rather than by boxing the row. */}
       {isLeader ? (
-        <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-[--accent-bar]" />
+        <span aria-hidden="true" className="absolute inset-y-0 left-0 z-20 w-1 bg-[--accent-bar]" />
       ) : null}
 
-      <a
-        href={entry.sourceUrl}
-        target="_blank"
-        rel="sponsored noopener noreferrer"
-        onClick={() => trackClick(entry.id)}
-        onAuxClick={() => trackClick(entry.id)}
-        className="flex items-center gap-3 py-3.5 pr-2 pl-3 transition-colors hover:bg-muted/50 sm:gap-4 sm:pl-5"
-      >
+      <div className="flex items-center gap-3 py-3.5 pr-2 pl-3 transition-colors group-hover:bg-muted/50 sm:gap-4 sm:pl-5">
+        {/*
+          Stretched link. The row used to be one big anchor, which meant the
+          action below was a link too — clicking "take this place" just opened
+          the listing. Overlaying the link instead lets a real button sit on top
+          of it at a higher layer, and keeps the whole row clickable.
+        */}
+        <a
+          href={entry.sourceUrl}
+          target="_blank"
+          rel="sponsored noopener noreferrer"
+          onClick={() => trackClick(entry.id)}
+          onAuxClick={() => trackClick(entry.id)}
+          aria-label={`${entry.label} — rank ${entry.rank}, ${formatDollars(entry.amountCents)}`}
+          className="absolute inset-0 z-10 rounded-sm focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none"
+        />
+
         <span
           className={cn(
             "flex size-9 shrink-0 items-center justify-center rounded-md text-sm font-black tabular-nums sm:size-11 sm:text-base",
@@ -92,12 +118,19 @@ export function ListingRow({ entry }: { entry: BoardEntry }) {
           >
             <RollingNumber value={entry.amountCents / 100} />
           </span>
-          {/* Revealed on hover so a resting row stays a clean ledger line. */}
-          <span className="shadow-hard-sm rounded-md border border-foreground bg-card px-2 py-0.5 text-[10px] font-bold whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 max-sm:hidden">
-            take this place · {nextPrice}
-          </span>
+
+          {/* z-20 puts this above the stretched link so it receives its own clicks. */}
+          {outOfReach ? null : (
+            <button
+              type="button"
+              onClick={takeThisPlace}
+              className="shadow-hard-sm relative z-20 cursor-pointer rounded-md border border-foreground bg-card px-2 py-0.5 text-[10px] font-bold whitespace-nowrap opacity-0 transition-all hover:-translate-x-px hover:-translate-y-px focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none active:translate-x-[2px] active:translate-y-[2px] active:shadow-none group-hover:opacity-100 group-focus-within:opacity-100 max-sm:hidden"
+            >
+              take this place · {nextPrice}
+            </button>
+          )}
         </div>
-      </a>
+      </div>
     </article>
   );
 }
