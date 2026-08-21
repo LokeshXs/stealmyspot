@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  MAX_BID_CENTS,
   MIN_BID_CENTS,
   applyTakeover,
   clampPage,
@@ -125,6 +126,16 @@ describe("quoteBid", () => {
     expect(quote.errors).toContain("not_higher_than_current");
   });
 
+  it("rejects above the maximum", () => {
+    const quote = quoteBid({ newAmountCents: MAX_BID_CENTS + 100, listings: [] });
+    expect(quote.ok).toBe(false);
+    expect(quote.errors).toContain("above_maximum");
+  });
+
+  it("accepts exactly the maximum", () => {
+    expect(quoteBid({ newAmountCents: MAX_BID_CENTS, listings: [] }).ok).toBe(true);
+  });
+
   it("rejects below the $1 minimum", () => {
     expect(quoteBid({ newAmountCents: 0, listings: [] }).errors).toContain("below_minimum");
     expect(quoteBid({ newAmountCents: 50, listings: [] }).errors).toContain("below_minimum");
@@ -157,6 +168,22 @@ describe("takeoverPriceCents", () => {
 
   it("has a floor so an empty board still has a price", () => {
     expect(takeoverPriceCents(0)).toBe(200);
+  });
+
+  /*
+   * `amountCents` is a 32-bit Postgres integer. Doubling an unclamped top bid
+   * is how a legal bid produces an out-of-range write on a path the bidder
+   * never chose, so the ceiling has to survive the multiplier.
+   */
+  it("never exceeds what the amountCents column can hold", () => {
+    const INT32_MAX = 2_147_483_647;
+    for (const top of [0, MIN_BID_CENTS, MAX_BID_CENTS, MAX_BID_CENTS * 1000, INT32_MAX]) {
+      expect(takeoverPriceCents(top)).toBeLessThanOrEqual(INT32_MAX);
+    }
+  });
+
+  it("clamps a top bid that would otherwise double past the ceiling", () => {
+    expect(takeoverPriceCents(MAX_BID_CENTS * 5)).toBe(MAX_BID_CENTS * 2);
   });
 });
 

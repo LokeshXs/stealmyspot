@@ -7,7 +7,7 @@ import { useBidForm, digitsOnly } from "@/components/bid-form-context";
 import { useBoard } from "@/components/board-context";
 import { Button } from "@/components/ui/button";
 import { formatDollars } from "@/lib/format";
-import { MIN_BID_CENTS } from "@/lib/ranking";
+import { MAX_BID_CENTS, MIN_BID_CENTS } from "@/lib/ranking";
 import { cn } from "@/lib/utils";
 
 /**
@@ -33,6 +33,7 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
 
   const takesTop = rank === 1;
   const dollars = Number.parseInt(digitsOnly(amount) || "0", 10);
+  const overMax = dollars * 100 > MAX_BID_CENTS;
 
   /*
    * The figure has to shrink as it gains digits, or "$1,000,000" runs past the
@@ -129,8 +130,12 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
           </Button>
         </div>
 
-        <p className="mt-3 text-sm text-muted-foreground">
-          {takesTop ? "Takes first place outright." : "Any amount takes the highest place it can afford."}
+        <p className={cn("mt-3 text-sm", overMax ? "font-medium text-destructive" : "text-muted-foreground")}>
+          {overMax
+            ? `That is over the ${formatDollars(MAX_BID_CENTS)} limit for a single bid.`
+            : takesTop
+              ? "Takes first place outright."
+              : "Any amount takes the highest place it can afford."}
         </p>
 
         {/* Sentinel: the sticky bar appears once this scrolls out of view. */}
@@ -181,11 +186,17 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
               aria-live="polite"
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold tabular-nums transition-colors",
-                takesTop ? "bg-primary/15 text-primary" : "text-muted-foreground",
+                takesTop && !overMax ? "bg-primary/15 text-primary" : "text-muted-foreground",
               )}
             >
-              <ArrowRight className="size-3.5" />
-              lands at #{rank}
+              {overMax ? (
+                <>Lower the number to place a bid</>
+              ) : (
+                <>
+                  <ArrowRight className="size-3.5" />
+                  lands at #{rank}
+                </>
+              )}
             </p>
           )}
         </div>

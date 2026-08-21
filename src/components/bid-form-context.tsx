@@ -11,7 +11,7 @@ import {
 import { useBoard } from "@/components/board-context";
 import { startTakeover, submitBid } from "@/app/actions";
 import { parseDollarsToCents } from "@/lib/format";
-import { MIN_BID_CENTS } from "@/lib/ranking";
+import { MAX_BID_CENTS, MIN_BID_CENTS } from "@/lib/ranking";
 
 /**
  * Ranks a hypothetical bid against the visible board. Mirrors `previewRank` in
@@ -55,7 +55,10 @@ export function BidFormProvider({ children }: { children: React.ReactNode }) {
 
   const amounts = useMemo(() => board.entries.map((e) => e.amountCents), [board.entries]);
   const amountCents = useMemo(() => parseDollarsToCents(amount), [amount]);
-  const validAmount = Number.isFinite(amountCents) && amountCents >= MIN_BID_CENTS;
+  const validAmount =
+    Number.isFinite(amountCents) &&
+    amountCents >= MIN_BID_CENTS &&
+    amountCents <= MAX_BID_CENTS;
   const rank = useMemo(
     () => (validAmount ? rankFor(amountCents, amounts) : 1),
     [validAmount, amountCents, amounts],
@@ -63,7 +66,10 @@ export function BidFormProvider({ children }: { children: React.ReactNode }) {
 
   function step(delta: number) {
     const current = Number.isFinite(amountCents) ? amountCents : board.nextBidCents;
-    setAmount(String(Math.round(Math.max(MIN_BID_CENTS, current + delta * 100) / 100)));
+    // Clamped both ends: a stepper is a deliberate nudge, so it should never
+    // hand back a number the server is going to refuse.
+    const next = Math.min(MAX_BID_CENTS, Math.max(MIN_BID_CENTS, current + delta * 100));
+    setAmount(String(Math.round(next / 100)));
   }
 
   function run(action: () => Promise<{ error?: string } | void>) {

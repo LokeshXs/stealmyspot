@@ -6,11 +6,13 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { BidKind, ListingStatus, PaymentStatus } from "@/generated/prisma/enums";
 import { getRankableListings } from "@/lib/board";
+import { formatDollars } from "@/lib/format";
 import { normalizeIdentity, type NormalizedIdentity } from "@/lib/identity";
 import { resolveRedirect, scrapeMetadata } from "@/lib/metadata";
 import { getPaymentProvider } from "@/lib/payments";
 import { paymentProvider } from "@/lib/env";
 import {
+  MAX_BID_CENTS,
   MIN_BID_CENTS,
   quoteBid,
   takeoverPriceCents,
@@ -23,7 +25,9 @@ export interface ActionError {
 
 const submitSchema = z.object({
   identity: z.string().trim().min(1).max(300),
-  amountCents: z.number().int().finite(),
+  // The ceiling is load-bearing: `amountCents` is a 32-bit Postgres integer, so
+  // an unbounded value reaches the database as an unhandled range error.
+  amountCents: z.number().int().finite().min(MIN_BID_CENTS).max(MAX_BID_CENTS),
 });
 
 const takeoverSchema = z.object({
@@ -154,7 +158,14 @@ export async function submitBid(input: {
   amountCents: number;
 }): Promise<ActionError | void> {
   const parsed = submitSchema.safeParse(input);
-  if (!parsed.success) return { error: "Enter a URL or @handle and a whole dollar amount." };
+  if (!parsed.success) {
+    const tooBig = parsed.error.issues.some((i) => i.code === "too_big");
+    return {
+      error: tooBig
+        ? `The most you can bid at once is ${formatDollars(MAX_BID_CENTS)}.`
+        : "Enter a URL or @handle and a whole dollar amount.",
+    };
+  }
 
   if (await rateLimited()) {
     return { error: "Too many attempts. Give it a few minutes and try again." };
@@ -191,6 +202,9 @@ export async function submitBid(input: {
     }
     if (quote.errors.includes("below_minimum")) {
       return { error: `The minimum bid is $${MIN_BID_CENTS / 100}.` };
+    }
+    if (quote.errors.includes("above_maximum")) {
+      return { error: `The most you can bid at once is ${formatDollars(MAX_BID_CENTS)}.` };
     }
     return { error: "Bids are whole US dollars, $1 at a time." };
   }

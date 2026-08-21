@@ -7,6 +7,20 @@
 
 /** Whole US dollars only. The board opens at $1. */
 export const MIN_BID_CENTS = 100;
+
+/**
+ * Ceiling on a single bid.
+ *
+ * `Listing.amountCents` is a Prisma `Int`, i.e. a 32-bit Postgres integer
+ * capped at 2,147,483,647 ($21,474,836.47). Anything above that is not a
+ * validation nicety — it is an unhandled "out of range for type integer" from
+ * the database.
+ *
+ * The cap must also survive a takeover, which costs TAKEOVER_MULTIPLIER × the
+ * standing top bid. At $1,000,000 the worst case is a $2,000,000 takeover —
+ * two orders of magnitude clear of the column limit.
+ */
+export const MAX_BID_CENTS = 100_000_000;
 export const INCREMENT_CENTS = 100;
 export const PAGE_SIZE = 50;
 export const TAKEOVER_HOURS = 3;
@@ -69,6 +83,7 @@ export function previewRank(
 export type QuoteErrorCode =
   | "not_a_whole_dollar"
   | "below_minimum"
+  | "above_maximum"
   | "not_higher_than_current"
   | "not_a_number";
 
@@ -110,6 +125,7 @@ export function quoteBid({
       errors.push("not_a_whole_dollar");
     }
     if (newAmountCents < MIN_BID_CENTS) errors.push("below_minimum");
+    if (newAmountCents > MAX_BID_CENTS) errors.push("above_maximum");
     if (existingListing && newAmountCents <= existingListing.amountCents) {
       errors.push("not_higher_than_current");
     }
@@ -129,9 +145,13 @@ export function quoteBid({
   };
 }
 
-/** A takeover costs double the current #1, floored so an empty board still has a price. */
+/**
+ * A takeover costs double the current #1, floored so an empty board still has a
+ * price and clamped so the doubling can never exceed what the column can hold.
+ */
 export function takeoverPriceCents(topCents: number): number {
-  return Math.max(MIN_BID_CENTS * TAKEOVER_MULTIPLIER, topCents * TAKEOVER_MULTIPLIER);
+  const doubled = Math.max(MIN_BID_CENTS * TAKEOVER_MULTIPLIER, topCents * TAKEOVER_MULTIPLIER);
+  return Math.min(doubled, MAX_BID_CENTS * TAKEOVER_MULTIPLIER);
 }
 
 export function takeoverEndsAt(startsAt: Date): Date {
