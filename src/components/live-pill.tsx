@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { formatCount } from "@/lib/format";
 
 /**
- * Inline readership indicator for the masthead. Server-renders with real counts,
- * then polls so the figure actually moves.
+ * Readership badge for the masthead: a pill carrying the live count, the past
+ * hour, and a way through to the figures. Server-renders with real numbers,
+ * then polls so the count actually moves.
+ *
+ * The two trailing segments are hidden below `sm` — on a phone the pill has to
+ * share a line with the wordmark, so only the live count earns its place.
  */
 export function LivePill({
   initialOnline,
@@ -38,16 +43,24 @@ export function LivePill({
   }, []);
 
   return (
-    <span
-      className="inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap text-muted-foreground"
-      title={`${formatCount(counts.lastHour)} in the past hour`}
+    <Link
+      href="/stats"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
     >
-      <span className="relative inline-flex size-1.5 shrink-0">
+      <span className="relative inline-flex size-2 shrink-0">
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-70 motion-reduce:animate-none" />
-        <span className="relative inline-flex size-1.5 rounded-full bg-live" />
+        <span className="relative inline-flex size-2 rounded-full bg-live" />
       </span>
-      <span className="tabular-nums">{formatCount(counts.online)}</span>
-      <span>reading now</span>
-    </span>
+
+      <span className="font-semibold text-live tabular-nums">
+        {formatCount(counts.online)} reading now
+      </span>
+
+      <span className="hidden tabular-nums sm:inline">
+        · {formatCount(counts.lastHour)} in the past hour
+      </span>
+
+      <span className="hidden text-foreground sm:inline">· see stats→</span>
+    </Link>
   );
 }
