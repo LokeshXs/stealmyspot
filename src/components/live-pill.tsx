@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePresenceBaseline } from "@/components/presence-baseline-context";
+import { addPresenceBaseline } from "@/lib/display-presence";
 import { formatCount } from "@/lib/format";
 
 /**
@@ -20,6 +22,8 @@ export function LivePill({
   initialLastHour: number;
 }) {
   const [counts, setCounts] = useState({ online: initialOnline, lastHour: initialLastHour });
+  const baseline = usePresenceBaseline();
+  const displayCounts = addPresenceBaseline(counts, baseline);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,11 +57,11 @@ export function LivePill({
       </span>
 
       <span className="font-semibold text-live tabular-nums">
-        {formatCount(counts.online)} reading now
+        {formatCount(displayCounts.online)} reading now
       </span>
 
       <span className="hidden tabular-nums sm:inline">
-        · {formatCount(counts.lastHour)} in the past hour
+        · {formatCount(displayCounts.lastHour)} in the past hour
       </span>
 
       <span className="hidden text-foreground sm:inline">· see stats→</span>

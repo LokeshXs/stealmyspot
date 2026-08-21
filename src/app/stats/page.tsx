@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
+import { PresenceStatRows } from "@/components/presence-stat-rows";
 import { Wordmark } from "@/components/wordmark";
 import { getStats } from "@/lib/board";
 import { siteTitle } from "@/lib/env";
@@ -39,8 +40,7 @@ export default async function StatsPage() {
       <table className="mt-8 w-full border-b border-[--rule]">
         <caption className="sr-only">Ledger figures</caption>
         <tbody>
-          <Row label="Reading now" value={formatCount(presence.online)} />
-          <Row label="Readers in the past hour" value={formatCount(presence.lastHour)} />
+          <PresenceStatRows counts={presence} />
           <Row label="Entries on the ledger" value={formatCount(stats.listingCount)} />
           <Row label="Clicks sent onward" value={formatCount(stats.totalClicks)} />
           <Row label="Bids settled" value={formatCount(stats.bidCount)} />

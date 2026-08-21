@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Inter_Tight } from "next/font/google";
+import { connection } from "next/server";
+import { PresenceBaselineProvider } from "@/components/presence-baseline-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PresenceTracker } from "@/components/presence-tracker";
+import { createPresenceBaseline } from "@/lib/display-presence";
 import { appUrl, branding, siteTitle } from "@/lib/env";
 import "./globals.css";
 
@@ -32,7 +35,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  await connection();
+  const presenceBaseline = createPresenceBaseline();
+
   return (
     <html
       lang="en"
@@ -40,10 +46,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${interTight.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <ThemeProvider>
-          {children}
-          <PresenceTracker />
-        </ThemeProvider>
+        <PresenceBaselineProvider initialBaseline={presenceBaseline}>
+          <ThemeProvider>
+            {children}
+            <PresenceTracker />
+          </ThemeProvider>
+        </PresenceBaselineProvider>
       </body>
     </html>
   );
