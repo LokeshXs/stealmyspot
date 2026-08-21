@@ -26,7 +26,7 @@ export async function SiteHeader() {
           Rules
         </Link>
         <Link href="/stats" className="text-muted-foreground transition-colors hover:text-foreground">
-          Figures
+          See Stats
         </Link>
         <ThemeToggle />
       </div>

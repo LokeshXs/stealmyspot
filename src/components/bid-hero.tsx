@@ -34,6 +34,20 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
   const takesTop = rank === 1;
   const dollars = Number.parseInt(digitsOnly(amount) || "0", 10);
 
+  /*
+   * The figure has to shrink as it gains digits, or "$1,000,000" runs past the
+   * steppers and pushes a phone into horizontal scroll.
+   *
+   * `cqi` is 1% of the label's inline size, so `100cqi / chars` is the width
+   * available per character — the container sizes from the flex line, never
+   * from its contents, so there is no circularity. The `vw` term keeps short
+   * figures from ballooning on a small screen, and the clamp bounds both ends.
+   */
+  const displayLength = dollars.toLocaleString("en-US").length + 1;
+  const amountFontSize = `clamp(1.75rem, min(16vw, calc(100cqi / ${(
+    displayLength * 0.7
+  ).toFixed(2)})), 7.5rem)`;
+
   return (
     <section className="py-10 sm:py-14">
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
@@ -72,7 +86,7 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
             −
           </Button>
 
-          <label className="relative flex min-w-0 flex-1 items-center justify-center">
+          <label className="@container relative flex min-w-0 flex-1 items-center justify-center">
             <span className="sr-only">Amount in whole dollars</span>
 
             {/*
@@ -81,8 +95,9 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
             */}
             <span
               aria-hidden="true"
+              style={{ fontSize: amountFontSize }}
               className={cn(
-                "pointer-events-none block text-[clamp(3.5rem,16vw,7.5rem)] leading-none font-black tracking-[-0.05em]",
+                "pointer-events-none block px-2 leading-none font-black tracking-[-0.05em]",
                 takesTop ? "text-primary" : "text-foreground",
               )}
             >
@@ -97,7 +112,9 @@ export function BidHero({ sentinelRef }: { sentinelRef: React.Ref<HTMLDivElement
               value={amount}
               onChange={(e) => setAmount(digitsOnly(e.target.value))}
               aria-label="Amount in whole dollars"
-              className="absolute inset-0 h-full w-full cursor-text bg-transparent text-center text-[clamp(3.5rem,16vw,7.5rem)] leading-none font-black tracking-[-0.05em] text-transparent caret-primary outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              /* Must track the mirror exactly, or the caret drifts off the digits. */
+              style={{ fontSize: amountFontSize }}
+              className="absolute inset-0 h-full w-full cursor-text bg-transparent text-center leading-none font-black tracking-[-0.05em] text-transparent caret-primary outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             />
           </label>
 
